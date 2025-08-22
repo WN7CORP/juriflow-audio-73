@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,7 +29,14 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
           .order("Aula", { ascending: true });
 
         if (data) {
-          setLessons(data);
+          // Map Supabase data to Lesson interface
+          const mappedLessons: Lesson[] = data.map(item => ({
+            ...item,
+            Nome: item.Tema || `Aula ${item.Aula}`,
+            Link: item.video || '',
+            Descricao: item.conteudo || 'Conteúdo não disponível'
+          }));
+          setLessons(mappedLessons);
         }
       } catch (error) {
         console.error("Erro ao carregar aulas:", error);

@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { YouTubePlayer } from './YouTubePlayer';
 import { isYouTubeUrl, extractYouTubeId } from '@/lib/utils';
@@ -37,6 +36,12 @@ const DropboxVideoPlayer = ({
   const lastTimeRef = useRef(0);
 
   const getDirectDropboxUrl = (url: string) => {
+    // Add null/undefined check
+    if (!url || typeof url !== 'string') {
+      console.warn('Invalid video URL provided:', url);
+      return '';
+    }
+    
     if (url.includes('dropbox.com') && url.includes('dl=0')) {
       return url.replace('dl=0', 'dl=1');
     }
@@ -149,10 +154,22 @@ const DropboxVideoPlayer = ({
 
   const directUrl = getDirectDropboxUrl(videoUrl);
 
+  // If no valid URL, show error message
+  if (!directUrl) {
+    return (
+      <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-lg mb-2">Vídeo não disponível</p>
+          <p className="text-sm text-gray-400">O link do vídeo não foi encontrado</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full bg-black rounded-lg overflow-hidden group"
+      className="relative w-full aspect-video bg-black rounded-lg overflow-hidden group"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >

@@ -101,11 +101,12 @@ export const LessonDetail = ({
           {/* Video Player Container */}
           <div className="relative bg-black">
             <EnhancedVideoPlayer
-              src={lesson.Link}
-              onProgress={handleVideoProgress}
-              onComplete={handleVideoComplete}
-              startTime={currentTime}
-              className="w-full aspect-video"
+              videoUrl={lesson.Link || lesson.video || ''}
+              lessonKey={lesson.id?.toString() || ''}
+              onVideoEnd={handleVideoComplete}
+              onVideoStart={() => console.log('Video started')}
+              title={lesson.Nome}
+              autoPlay={false}
             />
           </div>
 

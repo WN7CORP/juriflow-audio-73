@@ -1,15 +1,15 @@
-
 export interface Lesson {
   id: number;
   Dia: string;
   Aula: string;
   Tema: string;
-  Nome: string;
-  Link: string;
-  Descricao: string;
   video: string;
   conteudo: string;
   capa: string;
+  // Computed properties for backward compatibility
+  Nome: string; // maps to Tema
+  Link: string; // maps to video
+  Descricao: string; // maps to conteudo
 }
 
 export interface Module {

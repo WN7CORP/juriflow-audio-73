@@ -1,42 +1,42 @@
-
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { CourseModules } from "@/components/CourseModules";
 import { LessonList } from "@/components/LessonList";
 import { LessonDetail } from "@/components/LessonDetail";
+import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { Header } from "@/components/Header";
 import { Lesson } from "@/types/course";
-import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'modules' | 'lessons' | 'lesson'>('modules');
+  const [allLessons, setAllLessons] = useState<Lesson[]>([]);
+  const [currentView, setCurrentView] = useState<'modules' | 'lessons' | 'lesson' | 'dashboard'>('modules');
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-  const [allLessons, setAllLessons] = useState<Lesson[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAllLessons = async () => {
-      try {
-        const { data } = await supabase
-          .from("VIDEO-AULAS-DIAS")
-          .select("*")
-          .order("Dia", { ascending: true })
-          .order("Aula", { ascending: true });
-        
-        if (data) {
-          setAllLessons(data);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar lições:", error);
-      } finally {
-        setIsLoading(false);
+    const fetchLessons = async () => {
+      const { data } = await supabase
+        .from("VIDEO-AULAS-DIAS")
+        .select("*")
+        .order("Dia", { ascending: true })
+        .order("Aula", { ascending: true });
+
+      if (data) {
+        // Map Supabase data to Lesson interface
+        const mappedLessons: Lesson[] = data.map(item => ({
+          ...item,
+          Nome: item.Tema || `Aula ${item.Aula}`,
+          Link: item.video || '',
+          Descricao: item.conteudo || 'Conteúdo não disponível'
+        }));
+        setAllLessons(mappedLessons);
       }
     };
 
-    fetchAllLessons();
+    fetchLessons();
   }, []);
 
-  const handleModuleClick = (day: string) => {
+  const handleDayClick = (day: string) => {
     setSelectedDay(day);
     setCurrentView('lessons');
   };
@@ -51,90 +51,58 @@ const Index = () => {
       setCurrentView('lessons');
     } else if (currentView === 'lessons') {
       setCurrentView('modules');
+    } else if (currentView === 'dashboard') {
+      setCurrentView('modules');
     }
-  };
-
-  const getCurrentDayLessons = () => {
-    return allLessons.filter(lesson => lesson.Dia === selectedDay);
   };
 
   const handleNextLesson = () => {
     if (!selectedLesson) return;
-    
-    const currentDayLessons = getCurrentDayLessons();
+    const currentDayLessons = allLessons.filter(l => l.Dia === selectedLesson.Dia);
     const currentIndex = currentDayLessons.findIndex(l => l.id === selectedLesson.id);
-    
     if (currentIndex < currentDayLessons.length - 1) {
       setSelectedLesson(currentDayLessons[currentIndex + 1]);
-    } else {
-      // Next day's first lesson
-      const nextDay = String(Number(selectedLesson.Dia) + 1);
-      const nextDayLessons = allLessons.filter(lesson => lesson.Dia === nextDay);
-      if (nextDayLessons.length > 0) {
-        setSelectedDay(nextDay);
-        setSelectedLesson(nextDayLessons[0]);
-      }
     }
   };
 
   const handlePreviousLesson = () => {
     if (!selectedLesson) return;
-    
-    const currentDayLessons = getCurrentDayLessons();
+    const currentDayLessons = allLessons.filter(l => l.Dia === selectedLesson.Dia);
     const currentIndex = currentDayLessons.findIndex(l => l.id === selectedLesson.id);
-    
     if (currentIndex > 0) {
       setSelectedLesson(currentDayLessons[currentIndex - 1]);
-    } else {
-      // Previous day's last lesson
-      const prevDay = String(Number(selectedLesson.Dia) - 1);
-      const prevDayLessons = allLessons.filter(lesson => lesson.Dia === prevDay);
-      if (prevDayLessons.length > 0) {
-        setSelectedDay(prevDay);
-        setSelectedLesson(prevDayLessons[prevDayLessons.length - 1]);
-      }
     }
   };
 
-  const hasNext = () => {
+  const getHasNext = () => {
     if (!selectedLesson) return false;
-    const currentDayLessons = getCurrentDayLessons();
+    const currentDayLessons = allLessons.filter(l => l.Dia === selectedLesson.Dia);
     const currentIndex = currentDayLessons.findIndex(l => l.id === selectedLesson.id);
-    
-    // Has next in current day or next day exists
-    return currentIndex < currentDayLessons.length - 1 || 
-           allLessons.some(lesson => lesson.Dia === String(Number(selectedLesson.Dia) + 1));
+    return currentIndex < currentDayLessons.length - 1;
   };
 
-  const hasPrevious = () => {
+  const getHasPrevious = () => {
     if (!selectedLesson) return false;
-    const currentDayLessons = getCurrentDayLessons();
+    const currentDayLessons = allLessons.filter(l => l.Dia === selectedLesson.Dia);
     const currentIndex = currentDayLessons.findIndex(l => l.id === selectedLesson.id);
-    
-    // Has previous in current day or previous day exists
-    return currentIndex > 0 || 
-           allLessons.some(lesson => lesson.Dia === String(Number(selectedLesson.Dia) - 1));
+    return currentIndex > 0;
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <main className="w-full">
+      <Header 
+        currentView={currentView}
+        onDashboardClick={() => setCurrentView('dashboard')}
+      />
+      
+      <main className="pt-16">
         {currentView === 'modules' && (
-          <CourseModules onModuleClick={handleModuleClick} />
+          <CourseModules lessons={allLessons} onDayClick={handleDayClick} />
         )}
         
         {currentView === 'lessons' && (
           <LessonList 
-            day={selectedDay}
+            day={selectedDay} 
             onBack={handleBack}
             onLessonClick={handleLessonClick}
           />
@@ -146,9 +114,13 @@ const Index = () => {
             onBack={handleBack}
             onNextLesson={handleNextLesson}
             onPreviousLesson={handlePreviousLesson}
-            hasNext={hasNext()}
-            hasPrevious={hasPrevious()}
+            hasNext={getHasNext()}
+            hasPrevious={getHasPrevious()}
           />
+        )}
+        
+        {currentView === 'dashboard' && (
+          <ProgressDashboard onBack={handleBack} />
         )}
       </main>
     </div>
