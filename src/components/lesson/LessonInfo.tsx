@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle2 } from "lucide-react";
+import { Clock, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Lesson } from "@/types/course";
 import { useState } from "react";
 
@@ -26,16 +26,16 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
   };
 
   return (
-    <div className="p-4 lg:p-6">
-      <div className="flex items-start justify-between mb-4">
+    <div className="p-3 lg:p-6 animate-fade-in">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2 line-clamp-2">
+          <h1 className="text-base lg:text-xl font-bold text-foreground mb-2 line-clamp-2 leading-tight">
             {lesson.Tema}
           </h1>
           
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
+          <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm text-muted-foreground mb-3">
             <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-3 w-3 lg:h-4 lg:w-4" />
               <span>{formatDuration(duration)}</span>
             </div>
             {progressPercent > 0 && (
@@ -44,7 +44,7 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
               </div>
             )}
             {isCompleted && (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs animate-scale-in">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 Concluída
               </Badge>
@@ -55,38 +55,41 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
 
       {/* Progress Bar */}
       {progressPercent > 0 && (
-        <div className="mb-6">
+        <div className="mb-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-muted-foreground">Seu progresso</span>
-            <span className="text-sm font-medium">{Math.round(progressPercent)}%</span>
+            <span className="text-xs text-muted-foreground">Seu progresso</span>
+            <span className="text-xs font-medium">{Math.round(progressPercent)}%</span>
           </div>
-          <Progress value={progressPercent} className="h-2" />
+          <Progress value={progressPercent} className="h-1.5 lg:h-2" />
         </div>
       )}
 
       {/* Description - Expandable on mobile */}
       {lesson.conteudo && (
-        <div className="mb-6">
+        <div className="mb-4 animate-fade-in" style={{ animationDelay: '400ms' }}>
           <Button
             variant="ghost"
-            className="p-0 h-auto font-semibold text-left lg:cursor-default"
+            className="p-0 h-auto font-semibold text-left lg:cursor-default text-sm hover:bg-transparent"
             onClick={() => setShowDescription(!showDescription)}
           >
-            Sobre esta aula
+            <span>Sobre esta aula</span>
+            <ChevronDown className={`ml-1 h-3 w-3 lg:hidden transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`} />
           </Button>
-          <div className={`mt-2 text-muted-foreground text-sm leading-relaxed ${
-            showDescription ? 'block' : 'line-clamp-3 lg:block'
+          <div className={`mt-2 text-muted-foreground text-xs lg:text-sm leading-relaxed transition-all duration-300 ${
+            showDescription ? 'block max-h-none' : 'line-clamp-2 lg:block lg:max-h-none'
           }`}>
             {lesson.conteudo}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden mt-2 p-0 h-auto text-xs text-primary"
-            onClick={() => setShowDescription(!showDescription)}
-          >
-            {showDescription ? 'Ver menos' : 'Ver mais'}
-          </Button>
+          {!showDescription && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden mt-1 p-0 h-auto text-xs text-primary hover:bg-transparent"
+              onClick={() => setShowDescription(true)}
+            >
+              Ver mais
+            </Button>
+          )}
         </div>
       )}
     </div>
