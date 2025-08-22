@@ -273,4 +273,3 @@ export const LessonDetail = ({
     </div>
   );
 };
-```
