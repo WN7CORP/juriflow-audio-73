@@ -26,12 +26,12 @@ export const LessonDetail = ({
   hasNext,
   hasPrevious,
 }: LessonDetailProps) => {
-  const { completedLessons, getLessonProgress, updateLessonProgress } = useProgress();
+  const { completedLessons, getLessonProgress, updateLessonProgress, getCompletionRate } = useProgress();
   const [currentTime, setCurrentTime] = useState(0);
   const [showDescription, setShowDescription] = useState(false);
   
   const isCompleted = completedLessons.has(lesson.id?.toString() || '');
-  const progress = getLessonProgress(lesson.id?.toString() || '');
+  const progressPercent = getCompletionRate(lesson.id?.toString() || '');
 
   const handleVideoProgress = (currentTime: number, duration: number) => {
     setCurrentTime(currentTime);
@@ -101,7 +101,7 @@ export const LessonDetail = ({
           {/* Video Player Container */}
           <div className="relative bg-black">
             <EnhancedVideoPlayer
-              url={lesson.Link}
+              src={lesson.Link}
               onProgress={handleVideoProgress}
               onComplete={handleVideoComplete}
               startTime={currentTime}
@@ -122,9 +122,9 @@ export const LessonDetail = ({
                     <Clock className="h-4 w-4" />
                     <span>~15 min</span>
                   </div>
-                  {progress > 0 && (
+                  {progressPercent > 0 && (
                     <div className="flex items-center gap-1">
-                      <span>{Math.round(progress)}% assistido</span>
+                      <span>{Math.round(progressPercent)}% assistido</span>
                     </div>
                   )}
                   {isCompleted && (
@@ -138,13 +138,13 @@ export const LessonDetail = ({
             </div>
 
             {/* Progress Bar */}
-            {progress > 0 && (
+            {progressPercent > 0 && (
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-muted-foreground">Seu progresso</span>
-                  <span className="text-sm font-medium">{Math.round(progress)}%</span>
+                  <span className="text-sm font-medium">{Math.round(progressPercent)}%</span>
                 </div>
-                <Progress value={progress} className="h-2" />
+                <Progress value={progressPercent} className="h-2" />
               </div>
             )}
 
@@ -223,7 +223,7 @@ export const LessonDetail = ({
                   <span className="text-muted-foreground">Dia {lesson.Dia}</span>
                   <span className="font-medium">Aula {lesson.Aula}</span>
                 </div>
-                <Progress value={progress} className="h-2" />
+                <Progress value={progressPercent} className="h-2" />
                 <div className="text-xs text-muted-foreground text-center">
                   Continue assistindo para desbloquear o próximo conteúdo
                 </div>

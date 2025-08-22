@@ -4,6 +4,9 @@ export interface Lesson {
   Dia: string;
   Aula: string;
   Tema: string;
+  Nome: string;
+  Link: string;
+  Descricao: string;
   video: string;
   conteudo: string;
   capa: string;

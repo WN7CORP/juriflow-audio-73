@@ -18,7 +18,7 @@ interface LessonListProps {
 export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { completedLessons, getLessonProgress } = useProgress();
+  const { completedLessons, getCompletionRate } = useProgress();
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -97,8 +97,8 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
         <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
           {lessons.map((lesson, index) => {
             const isCompleted = completedLessons.has(lesson.id?.toString() || '');
-            const progress = getLessonProgress(lesson.id?.toString() || '');
-            const isWatching = progress > 0 && progress < 100;
+            const progressPercent = getCompletionRate(lesson.id?.toString() || '');
+            const isWatching = progressPercent > 0 && progressPercent < 100;
 
             return (
               <Card
@@ -146,11 +146,11 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
                     </div>
 
                     {/* Progress Bar on thumbnail for mobile */}
-                    {progress > 0 && (
+                    {progressPercent > 0 && (
                       <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
                         <div
                           className="h-full bg-primary transition-all duration-300"
-                          style={{ width: `${progress}%` }}
+                          style={{ width: `${progressPercent}%` }}
                         />
                       </div>
                     )}
@@ -192,24 +192,24 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
                         <Clock className="h-3 w-3" />
                         <span>~15 min</span>
                       </div>
-                      {progress > 0 && (
+                      {progressPercent > 0 && (
                         <div className="flex items-center gap-1">
                           <Play className="h-3 w-3" />
-                          <span>{Math.round(progress)}% assistido</span>
+                          <span>{Math.round(progressPercent)}% assistido</span>
                         </div>
                       )}
                     </div>
 
                     {/* Progress bar for desktop */}
-                    {progress > 0 && (
+                    {progressPercent > 0 && (
                       <div className="hidden sm:block">
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-xs text-muted-foreground">Progresso</span>
                           <span className="text-xs text-foreground font-medium">
-                            {Math.round(progress)}%
+                            {Math.round(progressPercent)}%
                           </span>
                         </div>
-                        <Progress value={progress} className="h-1.5" />
+                        <Progress value={progressPercent} className="h-1.5" />
                       </div>
                     )}
                   </div>

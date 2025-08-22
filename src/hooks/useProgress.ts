@@ -96,6 +96,32 @@ export const useProgress = () => {
     });
   };
 
+  const updateLessonProgress = (lessonKey: string, progressPercent: number, currentTime: number) => {
+    setLessonProgress(prev => {
+      const newMap = new Map(prev);
+      const existing = prev.get(lessonKey);
+      const totalDuration = existing?.totalDuration || 900; // Default 15 minutes
+      const watchTime = (progressPercent / 100) * totalDuration;
+      
+      const lessonProg: LessonProgress = {
+        lessonId: lessonKey,
+        watchTime: watchTime,
+        totalDuration,
+        completed: progressPercent >= 90,
+        lastPosition: currentTime,
+        completedAt: progressPercent >= 90 ? new Date() : existing?.completedAt
+      };
+      newMap.set(lessonKey, lessonProg);
+      saveLessonProgress(newMap);
+      return newMap;
+    });
+
+    // Update overall progress if lesson is completed
+    if (progressPercent >= 90) {
+      markAsCompleted(lessonKey);
+    }
+  };
+
   const markAsCompleted = (lessonKey: string) => {
     setProgress(prev => {
       const newProgress = {
@@ -139,6 +165,12 @@ export const useProgress = () => {
     return Math.min((lesson.watchTime / lesson.totalDuration) * 100, 100);
   };
 
+  const getTotalLessons = (): number => {
+    // This is a placeholder - in a real app you'd fetch this from your data source
+    // For now, return a default value based on typical course structure
+    return 50; // Adjust this based on your actual course structure
+  };
+
   return {
     completedLessons: progress.completedLessons,
     completedModules: progress.completedModules,
@@ -150,8 +182,10 @@ export const useProgress = () => {
     markModuleAsCompleted,
     setCurrentLesson,
     updateWatchTime,
+    updateLessonProgress,
     getLessonProgress,
     getCompletionRate,
+    getTotalLessons,
     lessonProgress
   };
 };
