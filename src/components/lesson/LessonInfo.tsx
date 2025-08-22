@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, CheckCircle2, ChevronDown } from "lucide-react";
 import { Lesson } from "@/types/course";
 import { useState } from "react";
 
@@ -33,19 +33,19 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
             {lesson.Tema}
           </h1>
           
-          <div className="flex flex-wrap items-center gap-3 text-sm lg:text-base text-muted-foreground mb-4">
-            <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-full">
-              <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="font-medium">{formatDuration(duration)}</span>
+          <div className="flex flex-wrap items-center gap-2 lg:gap-3 text-sm lg:text-base text-muted-foreground mb-4">
+            <div className="flex items-center gap-1.5 lg:gap-2 bg-muted/50 px-2.5 lg:px-3 py-1.5 rounded-full">
+              <Clock className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
+              <span className="font-medium text-xs lg:text-sm">{formatDuration(duration)}</span>
             </div>
             {progressPercent > 0 && (
-              <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
-                <span className="font-medium text-primary">{Math.round(progressPercent)}% assistido</span>
+              <div className="flex items-center gap-1.5 lg:gap-2 bg-primary/10 px-2.5 lg:px-3 py-1.5 rounded-full">
+                <span className="font-medium text-primary text-xs lg:text-sm">{Math.round(progressPercent)}% assistido</span>
               </div>
             )}
             {isCompleted && (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-sm lg:text-base px-3 py-1.5 animate-scale-in">
-                <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs lg:text-sm px-2.5 lg:px-3 py-1 lg:py-1.5 animate-scale-in">
+                <CheckCircle2 className="h-3.5 w-3.5 lg:h-4 lg:w-4 mr-1.5 lg:mr-2" />
                 Concluída
               </Badge>
             )}
@@ -53,23 +53,27 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar - Mobile Optimized */}
       {progressPercent > 0 && (
-        <div className="mb-5 lg:mb-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-sm lg:text-base text-muted-foreground font-medium">Seu progresso</span>
-            <span className="text-sm lg:text-base font-semibold text-primary">{Math.round(progressPercent)}%</span>
+        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="flex justify-between items-center mb-2 lg:mb-3">
+            <span className="text-sm lg:text-base text-muted-foreground font-medium">Progresso da aula</span>
+            <span className="text-base lg:text-lg font-bold text-primary">{Math.round(progressPercent)}%</span>
           </div>
-          <Progress value={progressPercent} className="h-2 lg:h-3 animate-scale-in" style={{ animationDelay: '300ms' }} />
+          <Progress 
+            value={progressPercent} 
+            className="h-3 lg:h-4 animate-scale-in bg-secondary" 
+            style={{ animationDelay: '300ms' }} 
+          />
         </div>
       )}
 
       {/* Description - Expandable on mobile */}
       {lesson.conteudo && (
-        <div className="mb-5 lg:mb-6 animate-fade-in" style={{ animationDelay: '400ms' }}>
+        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '400ms' }}>
           <Button
             variant="ghost"
-            className="p-0 h-auto font-semibold text-left lg:cursor-default text-base lg:text-lg hover:bg-transparent mb-3"
+            className="p-0 h-auto font-semibold text-left lg:cursor-default text-base lg:text-lg hover:bg-transparent mb-2 lg:mb-3"
             onClick={() => setShowDescription(!showDescription)}
           >
             <span>Sobre esta aula</span>

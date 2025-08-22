@@ -114,7 +114,7 @@ export const LessonDetail = ({
           {/* Video Player Container with transition */}
           <div className={`relative bg-black transition-opacity duration-300 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}>
             <EnhancedVideoPlayer
-              key={`${lesson.id}-${lesson.video}`} // Force re-render when lesson changes
+              key={`${lesson.id}-${lesson.video}`}
               videoUrl={lesson.video || ''}
               lessonKey={lessonKey}
               onVideoEnd={handleVideoComplete}
