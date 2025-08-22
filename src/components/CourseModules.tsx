@@ -68,20 +68,20 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section - Reduced padding to fix top spacing */}
+      {/* Hero Section - Minimal padding */}
       <div className="relative bg-gradient-to-br from-primary/10 via-background to-accent/5 border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-3">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
               Sua Jornada de Aprendizado
             </div>
             
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3 leading-tight">
               Seus Módulos de Estudo
             </h1>
             
-            <p className="text-base text-muted-foreground mb-6 leading-relaxed">
+            <p className="text-base text-muted-foreground mb-4 leading-relaxed">
               Selecione um módulo para começar ou continuar seus estudos
             </p>
 
@@ -116,8 +116,8 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
         </div>
       </div>
 
-      {/* Modules Grid - Reduced top padding */}
-      <div className="container mx-auto px-4 sm:px-6 py-8">
+      {/* Modules Grid - Minimal top padding */}
+      <div className="container mx-auto px-4 sm:px-6 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {modules.map((module) => (
             <ModuleCard
@@ -129,7 +129,7 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
         </div>
 
         {/* Progress Summary - Enhanced but more compact */}
-        <div className="mt-12 max-w-4xl mx-auto">
+        <div className="mt-8 max-w-4xl mx-auto">
           <div className="bg-card border border-border rounded-xl p-6">
             <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
               Progresso Geral
