@@ -26,35 +26,55 @@ export const LessonDetail = ({
   hasNext,
   hasPrevious,
 }: LessonDetailProps) => {
-  const { completedLessons, getLessonProgress, updateLessonProgress, getCompletionRate } = useProgress();
-  const [currentTime, setCurrentTime] = useState(0);
+  const { completedLessons, getLessonProgress, getCompletionRate } = useProgress();
   const [showDescription, setShowDescription] = useState(false);
+  const [lessonDuration, setLessonDuration] = useState(0);
+  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<NodeJS.Timeout | null>(null);
   
-  const isCompleted = completedLessons.has(lesson.id?.toString() || '');
-  const progressPercent = getCompletionRate(lesson.id?.toString() || '');
+  const lessonKey = lesson.id?.toString() || '';
+  const isCompleted = completedLessons.has(lessonKey);
+  const progressPercent = getCompletionRate(lessonKey);
 
-  const handleVideoProgress = (currentTime: number, duration: number) => {
-    setCurrentTime(currentTime);
-    if (duration > 0) {
-      const progressPercent = (currentTime / duration) * 100;
-      updateLessonProgress(lesson.id?.toString() || '', progressPercent, currentTime);
-    }
+  const formatDuration = (seconds: number) => {
+    if (seconds === 0) return "~15 min";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    if (minutes === 0) return `${remainingSeconds}s`;
+    if (remainingSeconds === 0) return `${minutes} min`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const handleVideoComplete = () => {
-    updateLessonProgress(lesson.id?.toString() || '', 100, currentTime);
-  };
-
-  // Auto-advance to next lesson when completed
-  useEffect(() => {
-    if (isCompleted && hasNext) {
+    if (hasNext) {
+      // Start 3-second countdown for auto-advance
       const timer = setTimeout(() => {
         onNextLesson();
-      }, 3000); // Wait 3 seconds before auto-advancing
-
-      return () => clearTimeout(timer);
+      }, 3000);
+      setAutoAdvanceTimer(timer);
     }
-  }, [isCompleted, hasNext, onNextLesson]);
+  };
+
+  const handleDurationChange = (duration: number) => {
+    setLessonDuration(duration);
+  };
+
+  // Clear auto-advance timer when component unmounts or lesson changes
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+      }
+    };
+  }, [autoAdvanceTimer, lesson.id]);
+
+  // Clear timer when user manually navigates
+  const handleManualNavigation = (navigationFn: () => void) => {
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      setAutoAdvanceTimer(null);
+    }
+    navigationFn();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,12 +121,13 @@ export const LessonDetail = ({
           {/* Video Player Container */}
           <div className="relative bg-black">
             <EnhancedVideoPlayer
-              videoUrl={lesson.Link || lesson.video || ''}
-              lessonKey={lesson.id?.toString() || ''}
+              videoUrl={lesson.video || ''}
+              lessonKey={lessonKey}
               onVideoEnd={handleVideoComplete}
               onVideoStart={() => console.log('Video started')}
-              title={lesson.Nome}
-              autoPlay={false}
+              title={lesson.Tema}
+              autoPlay={true}
+              onDurationChange={handleDurationChange}
             />
           </div>
 
@@ -115,13 +136,13 @@ export const LessonDetail = ({
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2 line-clamp-2">
-                  {lesson.Nome}
+                  {lesson.Tema}
                 </h1>
                 
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>~15 min</span>
+                    <span>{formatDuration(lessonDuration)}</span>
                   </div>
                   {progressPercent > 0 && (
                     <div className="flex items-center gap-1">
@@ -150,7 +171,7 @@ export const LessonDetail = ({
             )}
 
             {/* Description - Expandable on mobile */}
-            {lesson.Descricao && (
+            {lesson.conteudo && (
               <div className="mb-6">
                 <Button
                   variant="ghost"
@@ -162,7 +183,7 @@ export const LessonDetail = ({
                 <div className={`mt-2 text-muted-foreground text-sm leading-relaxed ${
                   showDescription || window.innerWidth >= 1024 ? 'block' : 'line-clamp-3'
                 }`}>
-                  {lesson.Descricao}
+                  {lesson.conteudo}
                 </div>
                 <Button
                   variant="ghost"
@@ -185,7 +206,7 @@ export const LessonDetail = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onPreviousLesson}
+                onClick={() => handleManualNavigation(onPreviousLesson)}
                 disabled={!hasPrevious}
                 className="flex-1"
               >
@@ -195,7 +216,7 @@ export const LessonDetail = ({
               <Button
                 variant="default"
                 size="sm"
-                onClick={onNextLesson}
+                onClick={() => handleManualNavigation(onNextLesson)}
                 disabled={!hasNext}
                 className="flex-1"
               >
@@ -205,7 +226,7 @@ export const LessonDetail = ({
             </div>
 
             {/* Auto-advance notification */}
-            {isCompleted && hasNext && (
+            {isCompleted && hasNext && autoAdvanceTimer && (
               <Card className="p-4 mb-6 bg-primary/10 border-primary/20">
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle2 className="h-4 w-4 text-green-400" />

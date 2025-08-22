@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { useProgress } from "@/hooks/useProgress";
 import { Module } from "@/types/course";
-import { Play, Clock, CheckCircle2, BookOpen } from "lucide-react";
+import { Play, Clock, CheckCircle2, BookOpen, Star } from "lucide-react";
 
 interface ModuleCardProps {
   module: Module;
@@ -22,107 +22,161 @@ export const ModuleCard = ({ module, onClick }: ModuleCardProps) => {
   const isCompleted = progressPercentage === 100;
   const isStarted = progressPercentage > 0;
   
-  // Get first lesson cover as module cover
-  const moduleCover = module.lessons[0]?.capa || '/placeholder.svg';
+  // Use modulo column as cover, fallback to first lesson's capa
+  const moduleCover = module.lessons[0]?.modulo || module.lessons[0]?.capa || '/placeholder.svg';
+  
+  // Calculate total estimated duration (15 min per lesson)
+  const estimatedDuration = module.lessons.length * 15;
   
   const getStatusBadge = () => {
     if (isCompleted) {
-      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Concluído</Badge>;
+      return (
+        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 font-medium">
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          Concluído
+        </Badge>
+      );
     }
     if (isStarted) {
-      return <Badge className="bg-primary/20 text-primary border-primary/30">Em Andamento</Badge>;
+      return (
+        <Badge className="bg-primary/20 text-primary border-primary/30 font-medium">
+          <Play className="h-3 w-3 mr-1" />
+          Em Andamento
+        </Badge>
+      );
     }
-    return <Badge variant="secondary">Novo</Badge>;
+    return (
+      <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30 font-medium">
+        <Star className="h-3 w-3 mr-1" />
+        Novo
+      </Badge>
+    );
+  };
+
+  const getGradientOverlay = () => {
+    if (isCompleted) return "from-green-900/80 via-green-800/40 to-transparent";
+    if (isStarted) return "from-primary/80 via-primary/40 to-transparent";
+    return "from-amber-900/80 via-amber-800/40 to-transparent";
   };
 
   return (
     <Card 
-      className="group cursor-pointer overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-elevated transform hover:scale-[1.02]"
+      className="group cursor-pointer overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 transform hover:scale-[1.02]"
       onClick={onClick}
     >
-      {/* Cover Image - Mobile Optimized */}
+      {/* Cover Image - Enhanced with better gradients */}
       <div className="relative aspect-video overflow-hidden">
         <img
           src={moduleCover}
-          alt={`Módulo ${module.day}`}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          alt={`Módulo Dia ${module.day}`}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder.svg';
           }}
         />
         
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        {/* Enhanced Gradient Overlay */}
+        <div className={`absolute inset-0 bg-gradient-to-t ${getGradientOverlay()}`} />
         
-        {/* Play Button */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-primary rounded-full p-3 sm:p-4 transform scale-75 group-hover:scale-100 transition-transform duration-300">
-            <Play className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground fill-current" />
+        {/* Play Button with Enhanced Animation */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+          <div className="bg-primary/90 backdrop-blur-sm rounded-full p-4 sm:p-6 transform scale-75 group-hover:scale-100 transition-all duration-500 shadow-2xl">
+            <Play className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground fill-current" />
           </div>
         </div>
         
-        {/* Status Badge */}
-        <div className="absolute top-3 right-3">
+        {/* Status Badge - Top Right */}
+        <div className="absolute top-4 right-4">
           {getStatusBadge()}
         </div>
 
-        {/* Completion Icon */}
-        {isCompleted && (
-          <div className="absolute top-3 left-3">
-            <div className="bg-green-500 rounded-full p-1">
-              <CheckCircle2 className="h-4 w-4 text-white" />
+        {/* Progress Indicator - Top Left */}
+        {isStarted && (
+          <div className="absolute top-4 left-4">
+            <div className="bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs font-medium">
+              {Math.round(progressPercentage)}%
             </div>
           </div>
         )}
-      </div>
 
-      {/* Content - Mobile Optimized */}
-      <div className="p-4 sm:p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
-            <h3 className="font-semibold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors">
+        {/* Module Title Overlay */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen className="h-5 w-5 text-white flex-shrink-0" />
+            <h3 className="font-bold text-xl sm:text-2xl text-white">
               Dia {module.day}
             </h3>
           </div>
-        </div>
-
-        {/* Lessons count and duration */}
-        <div className="flex items-center gap-4 mb-4 text-xs sm:text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Play className="h-3 w-3" />
-            <span>{module.lessons.length} {module.lessons.length === 1 ? 'aula' : 'aulas'}</span>
+          
+          {/* Quick Stats on Cover */}
+          <div className="flex items-center gap-4 text-white/80 text-sm">
+            <div className="flex items-center gap-1">
+              <Play className="h-3 w-3" />
+              <span>{module.lessons.length} {module.lessons.length === 1 ? 'aula' : 'aulas'}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>~{Math.ceil(estimatedDuration)} min</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            <span>~{Math.ceil(module.lessons.length * 15)} min</span>
-          </div>
         </div>
+      </div>
 
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs sm:text-sm">
-            <span className="text-muted-foreground">Progresso</span>
-            <span className="text-foreground font-medium">
+      {/* Content - Enhanced Layout */}
+      <div className="p-6">
+        {/* Progress Section - Enhanced */}
+        <div className="space-y-3 mb-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-muted-foreground">Progresso</span>
+            <span className="text-sm font-bold text-foreground bg-accent px-2 py-1 rounded">
               {completedCount}/{module.lessons.length}
             </span>
           </div>
           <Progress 
             value={progressPercentage} 
-            className="h-2 bg-muted"
+            className="h-3 bg-muted"
           />
-          <div className="text-xs text-muted-foreground text-right">
-            {Math.round(progressPercentage)}% concluído
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground">
+              {Math.round(progressPercentage)}% concluído
+            </span>
+            {isCompleted && (
+              <span className="text-green-400 font-medium flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Parabéns!
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Next lesson preview - Mobile friendly */}
+        {/* Next lesson preview - Enhanced */}
         {!isCompleted && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="text-xs text-muted-foreground mb-1">Próxima aula:</div>
-            <div className="text-sm font-medium text-foreground truncate">
-              {module.lessons.find(lesson => !completedLessons.has(lesson.id?.toString() || ''))?.Nome || module.lessons[0]?.Nome}
+          <div className="pt-4 border-t border-border">
+            <div className="text-xs text-muted-foreground mb-1 font-medium">
+              {isStarted ? 'Continue com:' : 'Comece com:'}
+            </div>
+            <div className="text-sm font-medium text-foreground line-clamp-2 leading-relaxed">
+              {module.lessons.find(lesson => !completedLessons.has(lesson.id?.toString() || ''))?.Tema || module.lessons[0]?.Tema}
+            </div>
+            {isStarted && (
+              <div className="mt-2 text-xs text-primary font-medium">
+                Continue de onde parou →
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Completion celebration */}
+        {isCompleted && (
+          <div className="pt-4 border-t border-green-500/20">
+            <div className="text-center">
+              <div className="text-green-400 font-semibold text-sm mb-1">
+                🎉 Módulo Concluído!
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Excelente trabalho! Continue sua jornada.
+              </div>
             </div>
           </div>
         )}

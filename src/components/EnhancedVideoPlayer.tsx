@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { YouTubePlayer } from './YouTubePlayer';
 import { isYouTubeUrl, extractYouTubeId } from '@/lib/utils';
@@ -13,6 +14,7 @@ interface EnhancedVideoPlayerProps {
   onVideoStart?: () => void;
   title?: string;
   autoPlay?: boolean;
+  onDurationChange?: (duration: number) => void;
 }
 
 const DropboxVideoPlayer = ({ 
@@ -21,9 +23,10 @@ const DropboxVideoPlayer = ({
   onVideoEnd, 
   onVideoStart, 
   title, 
-  autoPlay = false 
+  autoPlay = true,
+  onDurationChange
 }: EnhancedVideoPlayerProps) => {
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
@@ -32,11 +35,10 @@ const DropboxVideoPlayer = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { updateWatchTime, getLessonProgress } = useProgress();
+  const { updateLessonProgress, getLessonProgress } = useProgress();
   const lastTimeRef = useRef(0);
 
   const getDirectDropboxUrl = (url: string) => {
-    // Add null/undefined check
     if (!url || typeof url !== 'string') {
       console.warn('Invalid video URL provided:', url);
       return '';
@@ -49,45 +51,65 @@ const DropboxVideoPlayer = ({
   };
 
   useEffect(() => {
-    if (autoPlay && videoRef.current) {
-      videoRef.current.play();
-    }
-  }, [autoPlay]);
-
-  useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const updateProgress = () => {
-      const currentTimeValue = video.currentTime;
-      const watchedTime = currentTimeValue - lastTimeRef.current;
-      
-      if (watchedTime > 0 && watchedTime < 5) { // Prevent huge jumps
-        updateWatchTime(lessonKey, watchedTime, video.duration);
-      }
-      
-      lastTimeRef.current = currentTimeValue;
-      setCurrentTime(currentTimeValue);
-    };
-
     const handleLoadedMetadata = () => {
-      setDuration(video.duration);
+      const videoDuration = video.duration;
+      setDuration(videoDuration);
+      onDurationChange?.(videoDuration);
       
       // Resume from saved position
       const lessonProgress = getLessonProgress(lessonKey);
-      if (lessonProgress && lessonProgress.lastPosition > 0) {
+      if (lessonProgress && lessonProgress.lastPosition > 0 && lessonProgress.lastPosition < videoDuration * 0.9) {
         video.currentTime = lessonProgress.lastPosition;
+      }
+
+      // Auto-play if enabled
+      if (autoPlay) {
+        video.play().catch(console.error);
       }
     };
 
-    video.addEventListener('timeupdate', updateProgress);
+    const handleTimeUpdate = () => {
+      const currentTimeValue = video.currentTime;
+      setCurrentTime(currentTimeValue);
+      
+      if (duration > 0) {
+        const progressPercent = (currentTimeValue / duration) * 100;
+        updateLessonProgress(lessonKey, progressPercent, currentTimeValue, duration);
+      }
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+      onVideoStart?.();
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      updateLessonProgress(lessonKey, 100, duration, duration);
+      onVideoEnd?.();
+    };
+
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('ended', handleEnded);
 
     return () => {
-      video.removeEventListener('timeupdate', updateProgress);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('ended', handleEnded);
     };
-  }, [lessonKey, updateWatchTime, getLessonProgress]);
+  }, [lessonKey, duration, autoPlay, updateLessonProgress, getLessonProgress, onVideoStart, onVideoEnd, onDurationChange]);
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -95,9 +117,7 @@ const DropboxVideoPlayer = ({
         videoRef.current.pause();
       } else {
         videoRef.current.play();
-        onVideoStart?.();
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -154,7 +174,6 @@ const DropboxVideoPlayer = ({
 
   const directUrl = getDirectDropboxUrl(videoUrl);
 
-  // If no valid URL, show error message
   if (!directUrl) {
     return (
       <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center">
@@ -176,18 +195,8 @@ const DropboxVideoPlayer = ({
       <video
         ref={videoRef}
         className="w-full h-full object-contain"
-        onPlay={() => {
-          setIsPlaying(true);
-          onVideoStart?.();
-        }}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => {
-          setIsPlaying(false);
-          onVideoEnd?.();
-        }}
         preload="metadata"
         playsInline
-        autoPlay={autoPlay}
       >
         <source src={directUrl} type="video/mp4" />
         Seu navegador não suporta o elemento de vídeo.

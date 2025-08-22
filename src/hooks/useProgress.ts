@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { CourseProgress, LessonProgress } from '@/types/course';
+import { CourseProgress, LessonProgress, UserStats } from '@/types/course';
 
 const STORAGE_KEY = 'course-progress';
 const LESSON_PROGRESS_KEY = 'lesson-progress';
@@ -96,11 +95,9 @@ export const useProgress = () => {
     });
   };
 
-  const updateLessonProgress = (lessonKey: string, progressPercent: number, currentTime: number) => {
+  const updateLessonProgress = (lessonKey: string, progressPercent: number, currentTime: number, totalDuration: number) => {
     setLessonProgress(prev => {
       const newMap = new Map(prev);
-      const existing = prev.get(lessonKey);
-      const totalDuration = existing?.totalDuration || 900; // Default 15 minutes
       const watchTime = (progressPercent / 100) * totalDuration;
       
       const lessonProg: LessonProgress = {
@@ -109,7 +106,7 @@ export const useProgress = () => {
         totalDuration,
         completed: progressPercent >= 90,
         lastPosition: currentTime,
-        completedAt: progressPercent >= 90 ? new Date() : existing?.completedAt
+        completedAt: progressPercent >= 90 ? new Date() : prev.get(lessonKey)?.completedAt
       };
       newMap.set(lessonKey, lessonProg);
       saveLessonProgress(newMap);
@@ -161,14 +158,28 @@ export const useProgress = () => {
 
   const getCompletionRate = (lessonKey: string): number => {
     const lesson = lessonProgress.get(lessonKey);
-    if (!lesson) return 0;
+    if (!lesson || !lesson.totalDuration) return 0;
     return Math.min((lesson.watchTime / lesson.totalDuration) * 100, 100);
   };
 
   const getTotalLessons = (): number => {
-    // This is a placeholder - in a real app you'd fetch this from your data source
-    // For now, return a default value based on typical course structure
-    return 50; // Adjust this based on your actual course structure
+    return 50; // Adjust based on actual course structure
+  };
+
+  const getUserStats = (): UserStats => {
+    const totalLessons = getTotalLessons();
+    const lessonsCompleted = progress.completedLessons.size;
+    const completionRate = totalLessons > 0 ? (lessonsCompleted / totalLessons) * 100 : 0;
+    
+    return {
+      totalWatchTime: progress.totalWatchTime,
+      lessonsCompleted,
+      currentStreak: progress.streak,
+      totalLessons,
+      completionRate,
+      weeklyGoal: 300, // 5 hours in minutes
+      weeklyProgress: Math.min((progress.totalWatchTime / 300) * 100, 100)
+    };
   };
 
   return {
@@ -186,6 +197,7 @@ export const useProgress = () => {
     getLessonProgress,
     getCompletionRate,
     getTotalLessons,
-    lessonProgress
+    lessonProgress,
+    userStats: getUserStats()
   };
 };
