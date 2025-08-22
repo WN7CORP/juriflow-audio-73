@@ -3,28 +3,27 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { useProgress } from "@/hooks/useProgress";
-import { Lesson } from "@/types/course";
+import { Module } from "@/types/course";
 import { Play, Clock, CheckCircle2, BookOpen } from "lucide-react";
 
 interface ModuleCardProps {
-  day: string;
-  lessons: Lesson[];
+  module: Module;
   onClick: () => void;
 }
 
-export const ModuleCard = ({ day, lessons, onClick }: ModuleCardProps) => {
+export const ModuleCard = ({ module, onClick }: ModuleCardProps) => {
   const { completedLessons } = useProgress();
   
-  const completedCount = lessons.filter(lesson => 
+  const completedCount = module.lessons.filter(lesson => 
     completedLessons.has(lesson.id?.toString() || '')
   ).length;
   
-  const progressPercentage = lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0;
+  const progressPercentage = module.lessons.length > 0 ? (completedCount / module.lessons.length) * 100 : 0;
   const isCompleted = progressPercentage === 100;
   const isStarted = progressPercentage > 0;
   
   // Get first lesson cover as module cover
-  const moduleCover = lessons[0]?.capa || '/placeholder.svg';
+  const moduleCover = module.lessons[0]?.capa || '/placeholder.svg';
   
   const getStatusBadge = () => {
     if (isCompleted) {
@@ -45,7 +44,7 @@ export const ModuleCard = ({ day, lessons, onClick }: ModuleCardProps) => {
       <div className="relative aspect-video overflow-hidden">
         <img
           src={moduleCover}
-          alt={`Módulo ${day}`}
+          alt={`Módulo ${module.day}`}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -84,7 +83,7 @@ export const ModuleCard = ({ day, lessons, onClick }: ModuleCardProps) => {
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
             <h3 className="font-semibold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors">
-              Dia {day}
+              Dia {module.day}
             </h3>
           </div>
         </div>
@@ -93,11 +92,11 @@ export const ModuleCard = ({ day, lessons, onClick }: ModuleCardProps) => {
         <div className="flex items-center gap-4 mb-4 text-xs sm:text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Play className="h-3 w-3" />
-            <span>{lessons.length} {lessons.length === 1 ? 'aula' : 'aulas'}</span>
+            <span>{module.lessons.length} {module.lessons.length === 1 ? 'aula' : 'aulas'}</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            <span>~{Math.ceil(lessons.length * 15)} min</span>
+            <span>~{Math.ceil(module.lessons.length * 15)} min</span>
           </div>
         </div>
 
@@ -106,7 +105,7 @@ export const ModuleCard = ({ day, lessons, onClick }: ModuleCardProps) => {
           <div className="flex justify-between items-center text-xs sm:text-sm">
             <span className="text-muted-foreground">Progresso</span>
             <span className="text-foreground font-medium">
-              {completedCount}/{lessons.length}
+              {completedCount}/{module.lessons.length}
             </span>
           </div>
           <Progress 
@@ -123,7 +122,7 @@ export const ModuleCard = ({ day, lessons, onClick }: ModuleCardProps) => {
           <div className="mt-4 pt-4 border-t border-border">
             <div className="text-xs text-muted-foreground mb-1">Próxima aula:</div>
             <div className="text-sm font-medium text-foreground truncate">
-              {lessons.find(lesson => !completedLessons.has(lesson.id?.toString() || ''))?.Nome || lessons[0]?.Nome}
+              {module.lessons.find(lesson => !completedLessons.has(lesson.id?.toString() || ''))?.Nome || module.lessons[0]?.Nome}
             </div>
           </div>
         )}

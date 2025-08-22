@@ -1,4 +1,3 @@
-
 import { BookOpen, Trophy, User, Bell, Menu } from "lucide-react";
 import { useProgress } from "@/hooks/useProgress";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,12 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
-export const Header = () => {
+interface HeaderProps {
+  currentView?: 'modules' | 'lessons' | 'lesson' | 'dashboard';
+  onDashboardClick?: () => void;
+}
+
+export const Header = ({ currentView, onDashboardClick }: HeaderProps) => {
   const { completedLessons, totalWatchTime, streak, getTotalLessons } = useProgress();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   

@@ -1,118 +1,188 @@
-
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useProgress } from "@/hooks/useProgress";
-import { Trophy, Clock, Target, Flame, BookOpen, Play } from "lucide-react";
+import { 
+  Trophy, 
+  Clock, 
+  BookOpen, 
+  TrendingUp, 
+  Calendar,
+  Target,
+  Award,
+  ArrowLeft,
+  Flame
+} from "lucide-react";
 
-export const ProgressDashboard = () => {
-  const { completedLessons, totalWatchTime, streak, getTotalLessons } = useProgress();
-  
+interface ProgressDashboardProps {
+  onBack: () => void;
+}
+
+export const ProgressDashboard = ({ onBack }: ProgressDashboardProps) => {
+  const { 
+    completedLessons, 
+    totalWatchTime, 
+    streak, 
+    getTotalLessons,
+    getCompletionRate,
+    userStats
+  } = useProgress();
+
   const totalLessons = getTotalLessons();
-  const completedCount = completedLessons.size;
-  const overallProgress = totalLessons > 0 ? (completedCount / totalLessons) * 100 : 0;
-  const hoursStudied = Math.floor(totalWatchTime / 3600);
-  const minutesStudied = Math.floor((totalWatchTime % 3600) / 60);
+  const overallProgress = totalLessons > 0 ? (completedLessons.size / totalLessons) * 100 : 0;
+  const hoursWatched = Math.floor(totalWatchTime / 3600);
 
   return (
-    <Card className="bg-surface-elevated border-border shadow-elevated p-4 sm:p-6 mb-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Overall Progress - Mobile Priority */}
-        <div className="col-span-2 lg:col-span-1">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-primary/20">
-              <BookOpen className="h-5 w-5 text-primary" />
-            </div>
+    <div className="min-h-screen bg-background">
+      {/* Header with back button */}
+      <div className="sticky top-16 z-40 bg-surface-glass/95 backdrop-blur border-b border-border">
+        <div className="container mx-auto px-4 py-4 max-w-6xl">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="p-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-foreground">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                Painel de Progresso
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Acompanhe seu desempenho no curso
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Overall Progress Card */}
+          <Card className="bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Progresso Geral
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-4xl font-bold text-foreground">
                 {Math.round(overallProgress)}%
               </div>
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                Progresso Geral
+              <Progress value={overallProgress} className="h-3" />
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{completedLessons.size} de {totalLessons} aulas concluídas</span>
+                <span>{hoursWatched} horas de estudo</span>
               </div>
-            </div>
-          </div>
-          <Progress value={overallProgress} className="h-2 mb-2" />
-          <div className="text-xs text-muted-foreground">
-            {completedCount} de {totalLessons} aulas
-          </div>
-        </div>
+            </CardContent>
+          </Card>
 
-        {/* Time Studied */}
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-500/20">
-            <Clock className="h-5 w-5 text-blue-400" />
-          </div>
-          <div>
-            <div className="text-lg sm:text-xl font-bold text-foreground">
-              {hoursStudied}h {minutesStudied}m
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Tempo de Estudo
-            </div>
-          </div>
-        </div>
+          {/* Streak Card */}
+          <Card className="bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Flame className="h-5 w-5 text-orange-500" />
+                Sequência de Dias
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-4xl font-bold text-foreground">
+                {streak} dias
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Continue estudando para manter sua sequência!
+              </p>
+              <div className="text-sm text-muted-foreground">
+                Próximo objetivo: 7 dias
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Streak */}
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-orange-500/20">
-            <Flame className="h-5 w-5 text-orange-400" />
-          </div>
-          <div>
-            <div className="text-lg sm:text-xl font-bold text-foreground">
-              {streak}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Dias seguidos
-            </div>
-          </div>
-        </div>
+          {/* Time Studied Card */}
+          <Card className="bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Clock className="h-5 w-5 text-blue-500" />
+                Tempo Total de Estudo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-4xl font-bold text-foreground">
+                {hoursWatched} horas
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Continue se dedicando para alcançar seus objetivos!
+              </p>
+              <div className="text-sm text-muted-foreground">
+                Meta semanal: 5 horas
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Achievement Badge */}
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/20">
-            <Trophy className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <div className="text-lg sm:text-xl font-bold text-foreground">
-              {Math.floor(completedCount / 5)}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Conquistas
-            </div>
-          </div>
+          {/* Lessons Completed Card */}
+          <Card className="bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-green-500" />
+                Aulas Concluídas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-4xl font-bold text-foreground">
+                {completedLessons.size} aulas
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Continue concluindo aulas para avançar no curso!
+              </p>
+              <div className="text-sm text-muted-foreground">
+                Meta semanal: 3 aulas
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Completion Rate Card */}
+          <Card className="bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Target className="h-5 w-5 text-purple-500" />
+                Taxa de Conclusão
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-4xl font-bold text-foreground">
+                {userStats?.completionRate}%
+              </div>
+              <Progress value={userStats?.completionRate} className="h-3" />
+              <div className="text-sm text-muted-foreground">
+                Continue concluindo aulas para aumentar sua taxa de conclusão!
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Awards Card */}
+          <Card className="bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Award className="h-5 w-5 text-yellow-500" />
+                Conquistas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-2xl font-bold text-foreground">
+                Nenhuma conquista por enquanto
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Continue estudando para desbloquear novas conquistas!
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {/* Achievement Badges - Mobile Responsive */}
-      <div className="mt-6 pt-4 border-t border-border">
-        <div className="flex flex-wrap gap-2">
-          {hoursStudied >= 1 && (
-            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-              <Clock className="h-3 w-3 mr-1" />
-              Primeira Hora
-            </Badge>
-          )}
-          {streak >= 3 && (
-            <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-              <Flame className="h-3 w-3 mr-1" />
-              Streak de 3 dias
-            </Badge>
-          )}
-          {completedCount >= 5 && (
-            <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-              <Play className="h-3 w-3 mr-1" />
-              5 Aulas Completas
-            </Badge>
-          )}
-          {overallProgress >= 25 && (
-            <Badge className="bg-primary/20 text-primary border-primary/30">
-              <Target className="h-3 w-3 mr-1" />
-              25% do Curso
-            </Badge>
-          )}
-        </div>
-      </div>
-    </Card>
+    </div>
   );
 };
