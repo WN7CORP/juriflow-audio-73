@@ -68,49 +68,47 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section - Enhanced */}
+      {/* Hero Section - Reduced padding to fix top spacing */}
       <div className="relative bg-gradient-to-br from-primary/10 via-background to-accent/5 border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-4">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
               Sua Jornada de Aprendizado
             </div>
             
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-              Domine Seus Estudos
-              <span className="block text-primary">Dia Após Dia</span>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 leading-tight">
+              Seus Módulos de Estudo
             </h1>
             
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Transforme seu conhecimento com nosso método estruturado. 
-              Cada módulo foi cuidadosamente desenvolvido para maximizar seu aprendizado.
+            <p className="text-base text-muted-foreground mb-6 leading-relaxed">
+              Selecione um módulo para começar ou continuar seus estudos
             </p>
 
-            {/* Stats Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+            {/* Stats Section - Compact */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-1">
+                <div className="text-xl font-bold text-primary mb-1">
                   {modules.length}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Módulos Disponíveis
+                <div className="text-xs text-muted-foreground">
+                  Módulos
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-1">
+                <div className="text-xl font-bold text-primary mb-1">
                   {lessons.length}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Aulas Totais
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-1">
+                <div className="text-xl font-bold text-primary mb-1">
                   {completedLessons.size}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Aulas Concluídas
+                <div className="text-xs text-muted-foreground">
+                  Concluídas
                 </div>
               </div>
             </div>
@@ -118,17 +116,8 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
         </div>
       </div>
 
-      {/* Modules Grid - Enhanced */}
-      <div className="container mx-auto px-4 sm:px-6 py-12">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Seus Módulos de Estudo
-          </h2>
-          <p className="text-muted-foreground">
-            Selecione um módulo para começar ou continuar seus estudos
-          </p>
-        </div>
-
+      {/* Modules Grid - Reduced top padding */}
+      <div className="container mx-auto px-4 sm:px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {modules.map((module) => (
             <ModuleCard
@@ -139,47 +128,47 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
           ))}
         </div>
 
-        {/* Progress Summary - Enhanced */}
-        <div className="mt-16 max-w-4xl mx-auto">
-          <div className="bg-card border border-border rounded-xl p-8">
-            <h3 className="text-xl font-semibold text-foreground mb-6 text-center">
-              Resumo do Seu Progresso
+        {/* Progress Summary - Enhanced but more compact */}
+        <div className="mt-12 max-w-4xl mx-auto">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
+              Progresso Geral
             </h3>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="text-center p-4 bg-accent/20 rounded-lg">
-                <div className="text-2xl font-bold text-primary mb-2">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="text-center p-3 bg-accent/20 rounded-lg">
+                <div className="text-xl font-bold text-primary mb-1">
                   {Math.round((completedLessons.size / lessons.length) * 100)}%
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Progresso Geral
+                <div className="text-xs text-muted-foreground">
+                  Concluído
                 </div>
               </div>
               
-              <div className="text-center p-4 bg-accent/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-500 mb-2">
+              <div className="text-center p-3 bg-accent/20 rounded-lg">
+                <div className="text-xl font-bold text-green-500 mb-1">
                   {modules.filter(m => m.completedLessons === m.totalLessons).length}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Módulos Concluídos
+                <div className="text-xs text-muted-foreground">
+                  Finalizados
                 </div>
               </div>
               
-              <div className="text-center p-4 bg-accent/20 rounded-lg">
-                <div className="text-2xl font-bold text-amber-500 mb-2">
+              <div className="text-center p-3 bg-accent/20 rounded-lg">
+                <div className="text-xl font-bold text-amber-500 mb-1">
                   {modules.filter(m => m.completedLessons > 0 && m.completedLessons < m.totalLessons).length}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Em Andamento
                 </div>
               </div>
               
-              <div className="text-center p-4 bg-accent/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-500 mb-2">
+              <div className="text-center p-3 bg-accent/20 rounded-lg">
+                <div className="text-xl font-bold text-blue-500 mb-1">
                   {modules.filter(m => m.completedLessons === 0).length}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Novos Módulos
+                <div className="text-xs text-muted-foreground">
+                  Novos
                 </div>
               </div>
             </div>

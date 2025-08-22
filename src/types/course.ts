@@ -1,3 +1,4 @@
+
 export interface Lesson {
   id: number;
   Dia: string;
@@ -6,6 +7,7 @@ export interface Lesson {
   video: string;
   conteudo: string;
   capa: string;
+  modulo?: string; // Added the modulo property
   // Computed properties for backward compatibility
   Nome: string; // maps to Tema
   Link: string; // maps to video
