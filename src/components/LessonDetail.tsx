@@ -48,6 +48,7 @@ export const LessonDetail = ({
     if (hasNext) {
       // Start 3-second countdown for auto-advance
       const timer = setTimeout(() => {
+        console.log('Auto-advancing to next lesson');
         onNextLesson();
       }, 3000);
       setAutoAdvanceTimer(timer);
@@ -69,11 +70,26 @@ export const LessonDetail = ({
 
   // Clear timer when user manually navigates
   const handleManualNavigation = (navigationFn: () => void) => {
+    console.log('Manual navigation triggered');
     if (autoAdvanceTimer) {
       clearTimeout(autoAdvanceTimer);
       setAutoAdvanceTimer(null);
     }
     navigationFn();
+  };
+
+  const handleNextClick = () => {
+    console.log('Next button clicked, hasNext:', hasNext);
+    if (hasNext) {
+      handleManualNavigation(onNextLesson);
+    }
+  };
+
+  const handlePreviousClick = () => {
+    console.log('Previous button clicked, hasPrevious:', hasPrevious);
+    if (hasPrevious) {
+      handleManualNavigation(onPreviousLesson);
+    }
   };
 
   return (
@@ -206,7 +222,7 @@ export const LessonDetail = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleManualNavigation(onPreviousLesson)}
+                onClick={handlePreviousClick}
                 disabled={!hasPrevious}
                 className="flex-1"
               >
@@ -216,7 +232,7 @@ export const LessonDetail = ({
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => handleManualNavigation(onNextLesson)}
+                onClick={handleNextClick}
                 disabled={!hasNext}
                 className="flex-1"
               >
@@ -257,3 +273,4 @@ export const LessonDetail = ({
     </div>
   );
 };
+```
