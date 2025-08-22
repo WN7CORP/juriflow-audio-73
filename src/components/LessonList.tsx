@@ -1,14 +1,13 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, Play, Clock, CheckCircle2, Circle, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Lesson } from "@/types/course";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, CheckCircle, Clock, Star, BookOpen } from "lucide-react";
-import { Loader2 } from "lucide-react";
 import { useProgress } from "@/hooks/useProgress";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 
 interface LessonListProps {
   day: string;
@@ -18,286 +17,220 @@ interface LessonListProps {
 
 export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { completedLessons, getCompletionRate } = useProgress();
+  const [isLoading, setIsLoading] = useState(true);
+  const { completedLessons, getLessonProgress } = useProgress();
 
   useEffect(() => {
     const fetchLessons = async () => {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("VIDEO-AULAS-DIAS")
           .select("*")
           .eq("Dia", day)
           .order("Aula", { ascending: true });
 
-        if (error) {
-          console.error("Error fetching lessons:", error);
-          return;
+        if (data) {
+          setLessons(data);
         }
-
-        setLessons(data || []);
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Erro ao carregar aulas:", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchLessons();
   }, [day]);
 
-  useEffect(() => {
-    // Auto-scroll to next lesson when page loads
-    const nextLesson = lessons.find(lesson => 
-      !completedLessons.has(`${lesson.Dia}-${lesson.Aula}`)
-    );
-    
-    if (nextLesson) {
-      setTimeout(() => {
-        const element = document.getElementById(`lesson-${nextLesson.id}`);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 500);
-    }
-  }, [lessons, completedLessons]);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <span className="text-muted-foreground">Carregando aulas...</span>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   const completedCount = lessons.filter(lesson => 
-    completedLessons.has(`${lesson.Dia}-${lesson.Aula}`)
+    completedLessons.has(lesson.id?.toString() || '')
   ).length;
-
-  const moduleProgress = lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0;
+  const progressPercentage = lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <Button variant="ghost" size="sm" onClick={onBack} className="gap-2 hover:bg-white/10">
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-        </div>
-        
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/20">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Módulo {day}
+    <div className="min-h-screen bg-background">
+      {/* Header - Mobile Optimized */}
+      <div className="sticky top-0 z-40 bg-surface-glass/95 backdrop-blur border-b border-border">
+        <div className="px-4 sm:px-6 py-4">
+          <div className="flex items-center gap-3 mb-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="p-2 hover:bg-accent"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h1 className="text-lg sm:text-xl font-bold text-foreground">
+                Módulo - Dia {day}
               </h1>
             </div>
-            
-            <p className="text-muted-foreground mb-4">
-              {completedCount}/{lessons.length} aulas concluídas • {Math.round(moduleProgress)}% completo
-            </p>
-
-            <div className="max-w-md">
-              <Progress value={moduleProgress} className="h-3" />
-            </div>
           </div>
 
-          <div className="text-right">
-            <div className="flex items-center gap-2 mb-2">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  className={`h-4 w-4 ${
-                    i < 4 ? 'text-yellow-400 fill-current' : 'text-muted-foreground'
-                  }`} 
-                />
-              ))}
+          {/* Progress Bar - Mobile */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs sm:text-sm">
+              <span className="text-muted-foreground">
+                {completedCount} de {lessons.length} aulas concluídas
+              </span>
+              <span className="text-foreground font-medium">
+                {Math.round(progressPercentage)}%
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Avaliação do módulo
-            </p>
+            <Progress value={progressPercentage} className="h-2" />
           </div>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Play className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <div className="font-semibold text-foreground">{lessons.length}</div>
-                <div className="text-sm text-muted-foreground">Total de Aulas</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Lessons List - Mobile Optimized */}
+      <div className="px-4 sm:px-6 py-6">
+        <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
+          {lessons.map((lesson, index) => {
+            const isCompleted = completedLessons.has(lesson.id?.toString() || '');
+            const progress = getLessonProgress(lesson.id?.toString() || '');
+            const isWatching = progress > 0 && progress < 100;
 
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <div>
-                <div className="font-semibold text-foreground">{completedCount}</div>
-                <div className="text-sm text-muted-foreground">Concluídas</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Clock className="h-4 w-4 text-blue-500" />
-              </div>
-              <div>
-                <div className="font-semibold text-foreground">{lessons.length * 8}min</div>
-                <div className="text-sm text-muted-foreground">Tempo Estimado</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Enhanced Lessons List */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Aulas do Módulo</h2>
-        
-        {lessons.map((lesson, index) => {
-          const isCompleted = completedLessons.has(`${lesson.Dia}-${lesson.Aula}`);
-          const completionRate = getCompletionRate(`${lesson.Dia}-${lesson.Aula}`);
-          const isNext = !isCompleted && (index === 0 || completedLessons.has(`${lessons[index - 1].Dia}-${lessons[index - 1].Aula}`));
-          const isLocked = !isNext && !isCompleted && index > 0 && !completedLessons.has(`${lessons[index - 1].Dia}-${lessons[index - 1].Aula}`);
-          
-          return (
-            <Card 
-              key={lesson.id}
-              id={`lesson-${lesson.id}`}
-              className={`group cursor-pointer transition-all duration-200 hover:shadow-card border-border overflow-hidden ${
-                isNext ? 'ring-2 ring-primary/30 bg-primary/5 hover:bg-primary/10' : 
-                isCompleted ? 'bg-green-500/5 hover:bg-green-500/10' :
-                isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:bg-accent/50'
-              }`}
-              onClick={() => !isLocked && onLessonClick(lesson)}
-            >
-              <CardContent className="p-0">
-                <div className="flex items-center gap-4">
-                  {/* Thumbnail */}
-                  <div className="relative w-32 h-20 flex-shrink-0">
-                    {lesson.capa ? (
-                      <img 
-                        src={lesson.capa} 
-                        alt={lesson.Tema}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-                        <Play className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    )}
+            return (
+              <Card
+                key={lesson.id}
+                className="group cursor-pointer overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
+                onClick={() => onLessonClick(lesson)}
+              >
+                <div className="flex flex-col sm:flex-row">
+                  {/* Thumbnail - Mobile Optimized */}
+                  <div className="relative w-full sm:w-48 aspect-video sm:aspect-square overflow-hidden flex-shrink-0">
+                    <img
+                      src={lesson.capa || '/placeholder.svg'}
+                      alt={lesson.Nome}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder.svg';
+                      }}
+                    />
                     
-                    {/* Play Overlay */}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="bg-primary/90 rounded-full p-2">
-                        <Play className="h-4 w-4 text-primary-foreground ml-0.5" />
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black/60 to-transparent" />
+                    
+                    {/* Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-primary/90 backdrop-blur-sm rounded-full p-3 sm:p-4 transform transition-all duration-300 group-hover:scale-110 group-hover:bg-primary">
+                        <Play className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground fill-current" />
                       </div>
                     </div>
 
-                    {/* Duration Badge */}
-                    <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
-                      ~8min
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            isCompleted 
-                              ? 'bg-green-500 text-white' 
-                              : isNext 
-                                ? 'bg-primary text-primary-foreground' 
-                                : isLocked
-                                  ? 'bg-muted text-muted-foreground'
-                                  : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {isCompleted ? (
-                              <CheckCircle className="h-4 w-4" />
-                            ) : (
-                              <span className="text-sm font-medium">{lesson.Aula}</span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {isNext && (
-                              <Badge variant="default" className="text-xs">
-                                Próxima
-                              </Badge>
-                            )}
-                            {isCompleted && (
-                              <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400">
-                                Concluída
-                              </Badge>
-                            )}
-                            {isLocked && (
-                              <Badge variant="secondary" className="text-xs">
-                                Bloqueada
-                              </Badge>
-                            )}
+                    {/* Status Icon */}
+                    <div className="absolute top-3 right-3">
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-400" />
+                      ) : isWatching ? (
+                        <div className="relative">
+                          <Circle className="h-5 w-5 text-primary" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-2 w-2 bg-primary rounded-full"></div>
                           </div>
                         </div>
+                      ) : (
+                        <Circle className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
 
-                        <h3 className="font-semibold text-foreground mb-1 line-clamp-2">
-                          {lesson.Tema}
-                        </h3>
-                        
-                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                          Aula {lesson.Aula} • Módulo {lesson.Dia}
-                        </p>
+                    {/* Progress Bar on thumbnail for mobile */}
+                    {progress > 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+                        <div
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
 
-                        {/* Progress Bar for Partially Watched */}
-                        {completionRate > 0 && completionRate < 100 && (
-                          <div className="mb-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-muted-foreground">Progresso</span>
-                              <span className="text-xs text-primary">{Math.round(completionRate)}%</span>
-                            </div>
-                            <Progress value={completionRate} className="h-1" />
-                          </div>
+                  {/* Content - Mobile Optimized */}
+                  <div className="flex-1 p-4 sm:p-6">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline" className="text-xs">
+                          Aula {lesson.Aula}
+                        </Badge>
+                        {isCompleted && (
+                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                            Concluída
+                          </Badge>
+                        )}
+                        {isWatching && (
+                          <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
+                            Em andamento
+                          </Badge>
                         )}
                       </div>
-
-                      {/* Action Button */}
-                      <Button 
-                        variant={isCompleted ? "secondary" : isNext ? "default" : "ghost"}
-                        size="sm"
-                        className="gap-2 flex-shrink-0"
-                        disabled={isLocked}
-                      >
-                        <Play className="h-4 w-4" />
-                        {isCompleted ? 'Revisar' : isNext ? 'Continuar' : 'Assistir'}
-                      </Button>
                     </div>
+
+                    <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      {lesson.Nome}
+                    </h3>
+
+                    {lesson.Descricao && (
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2 sm:line-clamp-3">
+                        {lesson.Descricao}
+                      </p>
+                    )}
+
+                    {/* Meta info - Mobile friendly */}
+                    <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground mb-3">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>~15 min</span>
+                      </div>
+                      {progress > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Play className="h-3 w-3" />
+                          <span>{Math.round(progress)}% assistido</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Progress bar for desktop */}
+                    {progress > 0 && (
+                      <div className="hidden sm:block">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs text-muted-foreground">Progresso</span>
+                          <span className="text-xs text-foreground font-medium">
+                            {Math.round(progress)}%
+                          </span>
+                        </div>
+                        <Progress value={progress} className="h-1.5" />
+                      </div>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Mobile CTA */}
+        <div className="mt-8 text-center">
+          <Card className="p-6 max-w-md mx-auto">
+            <h3 className="font-semibold mb-2">Continue Aprendendo</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {completedCount === lessons.length 
+                ? "Parabéns! Você concluiu este módulo."
+                : `Faltam ${lessons.length - completedCount} aulas para concluir.`
+              }
+            </p>
+          </Card>
+        </div>
       </div>
     </div>
   );

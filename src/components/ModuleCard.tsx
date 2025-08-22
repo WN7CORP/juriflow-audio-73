@@ -1,171 +1,133 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Module } from "@/types/course";
-import { BookOpen, CheckCircle, Clock, Play, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 import { useProgress } from "@/hooks/useProgress";
+import { Lesson } from "@/types/course";
+import { Play, Clock, CheckCircle2, BookOpen } from "lucide-react";
 
 interface ModuleCardProps {
-  module: Module;
+  day: string;
+  lessons: Lesson[];
   onClick: () => void;
 }
 
-export const ModuleCard = ({ module, onClick }: ModuleCardProps) => {
-  const { completedModules } = useProgress();
-  const progressPercentage = module.totalLessons > 0 
-    ? Math.round((module.completedLessons / module.totalLessons) * 100) 
-    : 0;
+export const ModuleCard = ({ day, lessons, onClick }: ModuleCardProps) => {
+  const { completedLessons } = useProgress();
   
-  const isCompleted = module.completedLessons === module.totalLessons;
-  const isModuleCompleted = completedModules.has(module.day);
-  const hasStarted = module.completedLessons > 0;
+  const completedCount = lessons.filter(lesson => 
+    completedLessons.has(lesson.id?.toString() || '')
+  ).length;
   
-  // Use the first lesson's cover image as module cover
-  const coverImage = module.lessons[0]?.capa || '';
+  const progressPercentage = lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0;
+  const isCompleted = progressPercentage === 100;
+  const isStarted = progressPercentage > 0;
+  
+  // Get first lesson cover as module cover
+  const moduleCover = lessons[0]?.capa || '/placeholder.svg';
+  
+  const getStatusBadge = () => {
+    if (isCompleted) {
+      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Concluído</Badge>;
+    }
+    if (isStarted) {
+      return <Badge className="bg-primary/20 text-primary border-primary/30">Em Andamento</Badge>;
+    }
+    return <Badge variant="secondary">Novo</Badge>;
+  };
 
   return (
     <Card 
-      className="group cursor-pointer hover:shadow-elevated transition-all duration-300 hover:scale-[1.02] border-border bg-card overflow-hidden relative"
+      className="group cursor-pointer overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-elevated transform hover:scale-[1.02]"
       onClick={onClick}
     >
-      {/* Cover Image Background */}
-      <div className="relative h-32 overflow-hidden">
-        {coverImage ? (
-          <div 
-            className="w-full h-full bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
-            style={{ backgroundImage: `url(${coverImage})` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      {/* Cover Image - Mobile Optimized */}
+      <div className="relative aspect-video overflow-hidden">
+        <img
+          src={moduleCover}
+          alt={`Módulo ${day}`}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/placeholder.svg';
+          }}
+        />
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        {/* Play Button */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-primary rounded-full p-3 sm:p-4 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+            <Play className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground fill-current" />
           </div>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <BookOpen className="h-12 w-12 text-primary/40" />
+        </div>
+        
+        {/* Status Badge */}
+        <div className="absolute top-3 right-3">
+          {getStatusBadge()}
+        </div>
+
+        {/* Completion Icon */}
+        {isCompleted && (
+          <div className="absolute top-3 left-3">
+            <div className="bg-green-500 rounded-full p-1">
+              <CheckCircle2 className="h-4 w-4 text-white" />
+            </div>
           </div>
         )}
-        
-        {/* Status Badges */}
-        <div className="absolute top-2 left-2 flex gap-2">
-          {module.isNew && (
-            <Badge variant="default" className="bg-primary text-primary-foreground text-xs">
-              Novo
-            </Badge>
-          )}
-          {isCompleted && (
-            <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
-              Concluído
-            </Badge>
-          )}
-          {hasStarted && !isCompleted && (
-            <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 text-xs">
-              Em Andamento
-            </Badge>
-          )}
-        </div>
-
-        {/* Play Button Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-primary/90 rounded-full p-3">
-            <Play className="h-6 w-6 text-primary-foreground ml-1" />
-          </div>
-        </div>
       </div>
 
-      <CardContent className="p-4">
+      {/* Content - Mobile Optimized */}
+      <div className="p-4 sm:p-6">
         <div className="flex items-start justify-between mb-3">
-          <div>
-            <h3 className="font-bold text-foreground text-lg mb-1">
-              Módulo {module.day}
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
+            <h3 className="font-semibold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors">
+              Dia {day}
             </h3>
-            <p className="text-sm text-muted-foreground">
-              {module.totalLessons} aula{module.totalLessons !== 1 ? 's' : ''}
-              {module.duration && (
-                <span className="ml-2 inline-flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {Math.round(module.duration / 60)}min
-                </span>
-              )}
-            </p>
-          </div>
-          
-          {isCompleted && (
-            <div className="flex items-center gap-1">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            </div>
-          )}
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-foreground">Progresso</span>
-            <span className="text-xs text-muted-foreground">
-              {progressPercentage}%
-            </span>
-          </div>
-          <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            />
           </div>
         </div>
 
-        {/* Lesson Preview */}
+        {/* Lessons count and duration */}
+        <div className="flex items-center gap-4 mb-4 text-xs sm:text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Play className="h-3 w-3" />
+            <span>{lessons.length} {lessons.length === 1 ? 'aula' : 'aulas'}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            <span>~{Math.ceil(lessons.length * 15)} min</span>
+          </div>
+        </div>
+
+        {/* Progress */}
         <div className="space-y-2">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Primeiras Aulas
-          </h4>
-          {module.lessons.slice(0, 2).map((lesson, index) => (
-            <div key={lesson.id} className="flex items-center gap-3 text-xs">
-              <div className="relative">
-                {lesson.capa ? (
-                  <img 
-                    src={lesson.capa} 
-                    alt={lesson.Tema}
-                    className="w-8 h-6 rounded object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-6 rounded bg-muted flex items-center justify-center">
-                    <Play className="h-2 w-2 text-muted-foreground" />
-                  </div>
-                )}
-                <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-card ${
-                  module.completedLessons > index ? 'bg-primary' : 'bg-muted'
-                }`} />
-              </div>
-              <span className="text-muted-foreground truncate flex-1">
-                {lesson.Tema}
-              </span>
-            </div>
-          ))}
-          
-          {module.lessons.length > 2 && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
-              <Clock className="w-3 h-3" />
-              <span>+{module.lessons.length - 2} mais aulas</span>
-            </div>
-          )}
-        </div>
-
-        {/* Action Hint */}
-        <div className="mt-4 pt-3 border-t border-border">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              {isCompleted ? 'Revisar módulo' : hasStarted ? 'Continuar estudos' : 'Começar agora'}
+          <div className="flex justify-between items-center text-xs sm:text-sm">
+            <span className="text-muted-foreground">Progresso</span>
+            <span className="text-foreground font-medium">
+              {completedCount}/{lessons.length}
             </span>
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  className={`h-3 w-3 ${
-                    i < 4 ? 'text-yellow-400 fill-current' : 'text-muted-foreground'
-                  }`} 
-                />
-              ))}
-            </div>
+          </div>
+          <Progress 
+            value={progressPercentage} 
+            className="h-2 bg-muted"
+          />
+          <div className="text-xs text-muted-foreground text-right">
+            {Math.round(progressPercentage)}% concluído
           </div>
         </div>
-      </CardContent>
+
+        {/* Next lesson preview - Mobile friendly */}
+        {!isCompleted && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="text-xs text-muted-foreground mb-1">Próxima aula:</div>
+            <div className="text-sm font-medium text-foreground truncate">
+              {lessons.find(lesson => !completedLessons.has(lesson.id?.toString() || ''))?.Nome || lessons[0]?.Nome}
+            </div>
+          </div>
+        )}
+      </div>
     </Card>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { CourseModules } from "@/components/CourseModules";
 import { LessonList } from "@/components/LessonList";
@@ -11,17 +12,24 @@ const Index = () => {
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [allLessons, setAllLessons] = useState<Lesson[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchAllLessons = async () => {
-      const { data } = await supabase
-        .from("VIDEO-AULAS-DIAS")
-        .select("*")
-        .order("Dia", { ascending: true })
-        .order("Aula", { ascending: true });
-      
-      if (data) {
-        setAllLessons(data);
+      try {
+        const { data } = await supabase
+          .from("VIDEO-AULAS-DIAS")
+          .select("*")
+          .order("Dia", { ascending: true })
+          .order("Aula", { ascending: true });
+        
+        if (data) {
+          setAllLessons(data);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar lições:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -108,10 +116,18 @@ const Index = () => {
            allLessons.some(lesson => lesson.Dia === String(Number(selectedLesson.Dia) - 1));
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-6 max-w-6xl">
+      <main className="w-full">
         {currentView === 'modules' && (
           <CourseModules onModuleClick={handleModuleClick} />
         )}

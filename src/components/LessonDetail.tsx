@@ -1,250 +1,237 @@
 
 import { useState, useEffect } from "react";
-import { Lesson } from "@/types/course";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, CheckCircle, Play, BookOpen, Clock, Target } from "lucide-react";
-import { EnhancedVideoPlayer } from "./EnhancedVideoPlayer";
-import { useProgress } from "@/hooks/useProgress";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { EnhancedVideoPlayer } from "./EnhancedVideoPlayer";
+import { ArrowLeft, ChevronLeft, ChevronRight, BookOpen, Clock, CheckCircle2 } from "lucide-react";
+import { Lesson } from "@/types/course";
+import { useProgress } from "@/hooks/useProgress";
 
 interface LessonDetailProps {
   lesson: Lesson;
   onBack: () => void;
-  onNextLesson?: () => void;
-  onPreviousLesson?: () => void;
-  hasNext?: boolean;
-  hasPrevious?: boolean;
+  onNextLesson: () => void;
+  onPreviousLesson: () => void;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
-export const LessonDetail = ({ 
-  lesson, 
-  onBack, 
-  onNextLesson, 
+export const LessonDetail = ({
+  lesson,
+  onBack,
+  onNextLesson,
   onPreviousLesson,
   hasNext,
-  hasPrevious 
+  hasPrevious,
 }: LessonDetailProps) => {
-  const { completedLessons, markAsCompleted, getCompletionRate, setCurrentLesson } = useProgress();
+  const { completedLessons, getLessonProgress, updateLessonProgress } = useProgress();
+  const [currentTime, setCurrentTime] = useState(0);
+  const [showDescription, setShowDescription] = useState(false);
   
-  const lessonKey = `${lesson.Dia}-${lesson.Aula}`;
-  const isCompleted = completedLessons.has(lessonKey);
-  const hasVideo = lesson.video && lesson.video.trim() !== '';
-  const completionRate = getCompletionRate(lessonKey);
+  const isCompleted = completedLessons.has(lesson.id?.toString() || '');
+  const progress = getLessonProgress(lesson.id?.toString() || '');
 
-  // Set current lesson when component mounts
-  useEffect(() => {
-    setCurrentLesson(lesson.Dia, lesson.Aula);
-  }, [lesson.Dia, lesson.Aula, setCurrentLesson]);
-
-  const handleVideoStart = () => {
-    console.log('Video started:', lesson.Tema);
-  };
-
-  const handleVideoEnd = () => {
-    if (!isCompleted) {
-      markAsCompleted(lessonKey);
+  const handleVideoProgress = (currentTime: number, duration: number) => {
+    setCurrentTime(currentTime);
+    if (duration > 0) {
+      const progressPercent = (currentTime / duration) * 100;
+      updateLessonProgress(lesson.id?.toString() || '', progressPercent, currentTime);
     }
-    // Auto-advance to next lesson after 3 seconds
-    setTimeout(() => {
-      if (hasNext && onNextLesson) {
-        onNextLesson();
-      }
-    }, 3000);
   };
 
-  const handleMarkCompleted = () => {
-    markAsCompleted(lessonKey);
+  const handleVideoComplete = () => {
+    updateLessonProgress(lesson.id?.toString() || '', 100, currentTime);
   };
+
+  // Auto-advance to next lesson when completed
+  useEffect(() => {
+    if (isCompleted && hasNext) {
+      const timer = setTimeout(() => {
+        onNextLesson();
+      }, 3000); // Wait 3 seconds before auto-advancing
+
+      return () => clearTimeout(timer);
+    }
+  }, [isCompleted, hasNext, onNextLesson]);
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={onBack} className="gap-2 hover:bg-white/10">
+    <div className="min-h-screen bg-background">
+      {/* Mobile Header */}
+      <div className="sticky top-0 z-50 bg-surface-glass/95 backdrop-blur border-b border-border lg:hidden">
+        <div className="flex items-center justify-between p-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="p-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              Dia {lesson.Dia} - Aula {lesson.Aula}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Video Section - Mobile First */}
+        <div className="w-full lg:w-2/3 xl:w-3/4">
+          {/* Desktop Header */}
+          <div className="hidden lg:flex items-center gap-4 p-6 border-b border-border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="p-2"
+            >
               <ArrowLeft className="h-4 w-4" />
-              Voltar
             </Button>
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/20">
-                  <Play className="h-5 w-5 text-primary" />
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  {lesson.Tema}
-                </h1>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>Aula {lesson.Aula}</span>
-                <span>•</span>
-                <span>Módulo {lesson.Dia}</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  ~8 minutos
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <Badge variant="outline">
+                Dia {lesson.Dia} - Aula {lesson.Aula}
+              </Badge>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {isCompleted && (
-              <Badge variant="secondary" className="bg-green-500/20 text-green-400 gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Concluída
-              </Badge>
+          {/* Video Player Container */}
+          <div className="relative bg-black">
+            <EnhancedVideoPlayer
+              url={lesson.Link}
+              onProgress={handleVideoProgress}
+              onComplete={handleVideoComplete}
+              startTime={currentTime}
+              className="w-full aspect-video"
+            />
+          </div>
+
+          {/* Video Info - Mobile Optimized */}
+          <div className="p-4 lg:p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2 line-clamp-2">
+                  {lesson.Nome}
+                </h1>
+                
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    <span>~15 min</span>
+                  </div>
+                  {progress > 0 && (
+                    <div className="flex items-center gap-1">
+                      <span>{Math.round(progress)}% assistido</span>
+                    </div>
+                  )}
+                  {isCompleted && (
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Concluída
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            {progress > 0 && (
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-muted-foreground">Seu progresso</span>
+                  <span className="text-sm font-medium">{Math.round(progress)}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
             )}
-            
-            {completionRate > 0 && completionRate < 100 && (
-              <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 gap-2">
-                <Target className="h-4 w-4" />
-                {Math.round(completionRate)}% assistido
-              </Badge>
+
+            {/* Description - Expandable on mobile */}
+            {lesson.Descricao && (
+              <div className="mb-6">
+                <Button
+                  variant="ghost"
+                  className="p-0 h-auto font-semibold text-left lg:cursor-default"
+                  onClick={() => setShowDescription(!showDescription)}
+                >
+                  Sobre esta aula
+                </Button>
+                <div className={`mt-2 text-muted-foreground text-sm leading-relaxed ${
+                  showDescription || window.innerWidth >= 1024 ? 'block' : 'line-clamp-3'
+                }`}>
+                  {lesson.Descricao}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden mt-2 p-0 h-auto text-xs text-primary"
+                  onClick={() => setShowDescription(!showDescription)}
+                >
+                  {showDescription ? 'Ver menos' : 'Ver mais'}
+                </Button>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Progress Bar */}
-        {completionRate > 0 && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Progresso da Aula</span>
-              <span className="text-sm text-muted-foreground">{Math.round(completionRate)}%</span>
-            </div>
-            <Progress value={completionRate} className="h-2" />
-          </div>
-        )}
-      </div>
-
-      {/* Enhanced Video Player */}
-      <Card className="border-border bg-card overflow-hidden">
-        <CardContent className="p-0">
-          <div className="relative aspect-video bg-black">
-            {hasVideo ? (
-              <EnhancedVideoPlayer
-                videoUrl={lesson.video}
-                lessonKey={lessonKey}
-                onVideoEnd={handleVideoEnd}
-                onVideoStart={handleVideoStart}
-                title={lesson.Tema}
-                autoPlay={true}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-card">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <Play className="h-8 w-8 text-muted-foreground ml-1" />
-                  </div>
-                  <h3 className="text-lg font-medium text-foreground mb-2">
-                    Vídeo não disponível
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Este conteúdo será disponibilizado em breve
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Lesson Content */}
-      {lesson.conteudo && (
-        <Card className="border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <BookOpen className="h-5 w-5 text-primary" />
-              </div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Material de Apoio
-              </h2>
-            </div>
-            <div 
-              className="prose prose-invert max-w-none text-foreground leading-relaxed"
-              dangerouslySetInnerHTML={{ 
-                __html: lesson.conteudo.replace(/\n/g, '<br />') 
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Enhanced Navigation */}
-      <Card className="border-border bg-card">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-2">
-              {hasPrevious && (
-                <Button variant="outline" onClick={onPreviousLesson} className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Aula Anterior
-                </Button>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              {!isCompleted && (
-                <Button variant="secondary" onClick={handleMarkCompleted} className="gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Marcar como Concluída
-                </Button>
-              )}
-              
-              {hasNext && (
-                <Button onClick={onNextLesson} className="gap-2 bg-primary hover:bg-primary/90">
-                  Próxima Aula
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Quick Navigation Hints */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-muted rounded text-xs">←</kbd>
-                <span>Aula anterior</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-muted rounded text-xs">→</kbd>
-                <span>Próxima aula</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-muted rounded text-xs">Espaço</kbd>
-                <span>Play/Pause</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Auto-advance notification */}
-      {isCompleted && hasNext && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">
-                  Parabéns! Você concluiu esta aula.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  A próxima aula será carregada automaticamente em alguns segundos.
-                </p>
-              </div>
-              <Button size="sm" onClick={onNextLesson} className="gap-2">
-                Ir Agora
-                <ArrowRight className="h-3 w-3" />
+        {/* Sidebar - Mobile Bottom Sheet Style */}
+        <div className="w-full lg:w-1/3 xl:w-1/4 bg-surface-elevated border-t lg:border-l lg:border-t-0 border-border">
+          <div className="p-4 lg:p-6">
+            {/* Navigation Controls - Mobile Optimized */}
+            <div className="flex gap-2 mb-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPreviousLesson}
+                disabled={!hasPrevious}
+                className="flex-1"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Anterior</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onNextLesson}
+                disabled={!hasNext}
+                className="flex-1"
+              >
+                <span className="hidden sm:inline">Próxima</span>
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+
+            {/* Auto-advance notification */}
+            {isCompleted && hasNext && (
+              <Card className="p-4 mb-6 bg-primary/10 border-primary/20">
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
+                  <span className="text-foreground">
+                    Próxima aula em 3 segundos...
+                  </span>
+                </div>
+              </Card>
+            )}
+
+            {/* Course Progress Summary */}
+            <Card className="p-4">
+              <h3 className="font-semibold mb-3">Progresso do Módulo</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Dia {lesson.Dia}</span>
+                  <span className="font-medium">Aula {lesson.Aula}</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+                <div className="text-xs text-muted-foreground text-center">
+                  Continue assistindo para desbloquear o próximo conteúdo
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,224 +1,137 @@
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 import { ModuleCard } from "./ModuleCard";
 import { ProgressDashboard } from "./ProgressDashboard";
-import { Lesson, Module } from "@/types/course";
-import { Loader2, BookOpen, Trophy, TrendingUp } from "lucide-react";
-import { useProgress } from "@/hooks/useProgress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { Lesson } from "@/types/course";
+import { BookOpen, Play, Clock } from "lucide-react";
 
-export const CourseModules = ({ onModuleClick }: { onModuleClick: (day: string) => void }) => {
-  const [modules, setModules] = useState<Module[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { completedLessons, completedModules } = useProgress();
+interface CourseModulesProps {
+  onModuleClick: (day: string) => void;
+}
+
+export const CourseModules = ({ onModuleClick }: CourseModulesProps) => {
+  const [modules, setModules] = useState<{ [key: string]: Lesson[] }>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLessons = async () => {
+    const fetchModules = async () => {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("VIDEO-AULAS-DIAS")
           .select("*")
           .order("Dia", { ascending: true })
           .order("Aula", { ascending: true });
 
-        if (error) {
-          console.error("Error fetching lessons:", error);
-          return;
+        if (data) {
+          const groupedByDay = data.reduce((acc, lesson) => {
+            const day = lesson.Dia;
+            if (!acc[day]) acc[day] = [];
+            acc[day].push(lesson);
+            return acc;
+          }, {} as { [key: string]: Lesson[] });
+
+          setModules(groupedByDay);
         }
-
-        // Group lessons by day
-        const groupedByDay = (data || []).reduce((acc: Record<string, Lesson[]>, lesson: Lesson) => {
-          if (!acc[lesson.Dia]) {
-            acc[lesson.Dia] = [];
-          }
-          acc[lesson.Dia].push(lesson);
-          return acc;
-        }, {});
-
-        // Create modules with progress
-        const moduleList: Module[] = Object.entries(groupedByDay).map(([day, lessons]) => {
-          const completedCount = lessons.filter(lesson => 
-            completedLessons.has(`${lesson.Dia}-${lesson.Aula}`)
-          ).length;
-
-          // Estimate duration (assuming 10 minutes per lesson on average)
-          const estimatedDuration = lessons.length * 10 * 60; // seconds
-
-          // Check if module is new (created in last 7 days)
-          const isNew = Math.random() > 0.7; // Simulated for demo
-
-          return {
-            day,
-            lessons,
-            totalLessons: lessons.length,
-            completedLessons: completedCount,
-            duration: estimatedDuration,
-            isNew,
-            coverImage: lessons[0]?.capa
-          };
-        });
-
-        setModules(moduleList);
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Erro ao carregar módulos:", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchLessons();
-  }, [completedLessons]);
+    fetchModules();
+  }, []);
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <div className="text-center">
-            <div className="text-lg font-medium text-foreground">Carregando seu curso...</div>
-            <div className="text-sm text-muted-foreground">Preparando a melhor experiência de aprendizado</div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  if (modules.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium text-foreground mb-2">
-          Nenhum módulo encontrado
-        </h3>
-        <p className="text-muted-foreground">
-          Aguarde a disponibilização do conteúdo do curso
-        </p>
-      </div>
-    );
-  }
-
-  const totalLessons = modules.reduce((acc, module) => acc + module.totalLessons, 0);
-  const totalCompleted = modules.reduce((acc, module) => acc + module.completedLessons, 0);
-  const overallProgress = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
+  const moduleEntries = Object.entries(modules);
 
   return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl" />
-        <div className="relative z-10 py-12 px-6">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-primary to-primary/80">
-              <Trophy className="h-8 w-8 text-primary-foreground" />
+    <div className="min-h-screen bg-background">
+      {/* Hero Section - Mobile Optimized */}
+      <div className="bg-gradient-primary text-primary-foreground px-4 py-8 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm">
+              <BookOpen className="h-8 w-8" />
             </div>
-            <h1 className="text-4xl font-bold text-foreground">
-              Seu Curso Completo
-            </h1>
           </div>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Aprenda de forma estruturada através de módulos organizados e acompanhe seu progresso em tempo real
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3">
+            Seu Curso Jurídico Premium
+          </h1>
+          <p className="text-base sm:text-lg opacity-90 mb-6 max-w-2xl mx-auto">
+            Aprenda direito de forma estruturada e prática. Cada módulo foi pensado para sua evolução profissional.
           </p>
-        </div>
-      </div>
-
-      {/* Progress Dashboard */}
-      <ProgressDashboard totalLessons={totalLessons} totalModules={modules.length} />
-
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Progresso Semanal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground mb-1">
-              {Math.min(totalCompleted, 7)}/7
+          
+          {/* Quick stats - Mobile friendly */}
+          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+            <div className="text-center">
+              <div className="text-xl sm:text-2xl font-bold">{moduleEntries.length}</div>
+              <div className="text-xs sm:text-sm opacity-80">Módulos</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Meta: 7 aulas por semana
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Próximo Módulo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold text-foreground mb-1">
-              Módulo {modules.find(m => m.completedLessons < m.totalLessons)?.day || '1'}
+            <div className="text-center">
+              <div className="text-xl sm:text-2xl font-bold">
+                {Object.values(modules).flat().length}
+              </div>
+              <div className="text-xs sm:text-sm opacity-80">Aulas</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Continue de onde parou
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              Conquistas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold text-foreground mb-1">
-              {completedModules.size} Módulos
+            <div className="text-center">
+              <div className="text-xl sm:text-2xl font-bold">30h+</div>
+              <div className="text-xs sm:text-sm opacity-80">Conteúdo</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Concluídos com sucesso
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Modules Grid */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Módulos do Curso</h2>
-          <div className="text-sm text-muted-foreground">
-            {modules.length} módulos disponíveis
           </div>
         </div>
-        
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {modules.map((module) => (
-            <ModuleCard
-              key={module.day}
-              module={module}
-              onClick={() => onModuleClick(module.day)}
-            />
-          ))}
-        </div>
       </div>
 
-      {/* Motivation Section */}
-      {overallProgress > 0 && (
-        <Card className="border-border bg-gradient-to-r from-primary/5 to-primary/10">
-          <CardContent className="p-6 text-center">
-            <Trophy className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-foreground mb-2">
-              Parabéns pelo seu progresso!
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Você já completou {overallProgress}% do curso. Continue assim!
-            </p>
-            <div className="w-full bg-secondary rounded-full h-3 max-w-md mx-auto">
-              <div 
-                className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-1000"
-                style={{ width: `${overallProgress}%` }}
+      {/* Dashboard - Mobile Responsive */}
+      <div className="px-4 sm:px-6 lg:px-8 -mt-4 relative z-10">
+        <ProgressDashboard />
+      </div>
+
+      {/* Modules Grid - Fully Responsive */}
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <Play className="h-6 w-6 text-primary" />
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+              Módulos do Curso
+            </h2>
+          </div>
+
+          {/* Mobile-first grid layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {moduleEntries.map(([day, lessons]) => (
+              <ModuleCard
+                key={day}
+                day={day}
+                lessons={lessons}
+                onClick={() => onModuleClick(day)}
               />
+            ))}
+          </div>
+
+          {/* Mobile CTA */}
+          <div className="mt-12 text-center">
+            <div className="bg-card rounded-2xl border p-6 sm:p-8 max-w-2xl mx-auto">
+              <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                Comece sua jornada hoje
+              </h3>
+              <p className="text-muted-foreground mb-4 text-sm sm:text-base">
+                Cada aula foi estruturada para maximizar seu aprendizado. 
+                Clique em um módulo para começar.
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
