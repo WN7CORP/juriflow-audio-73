@@ -70,7 +70,7 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
     <div className="min-h-screen bg-background">
       {/* Hero Section - Minimal padding */}
       <div className="relative bg-gradient-to-br from-primary/10 via-background to-accent/5 border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-3">
+        <div className="container mx-auto px-4 sm:px-6 pt-2 pb-4">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-2">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
