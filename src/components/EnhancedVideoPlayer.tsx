@@ -1,0 +1,317 @@
+
+import { useState, useRef, useEffect } from 'react';
+import { YouTubePlayer } from './YouTubePlayer';
+import { isYouTubeUrl, extractYouTubeId } from '@/lib/utils';
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, SkipForward } from 'lucide-react';
+import { Button } from './ui/button';
+import { Slider } from './ui/slider';
+import { useProgress } from '@/hooks/useProgress';
+
+interface EnhancedVideoPlayerProps {
+  videoUrl: string;
+  lessonKey: string;
+  onVideoEnd?: () => void;
+  onVideoStart?: () => void;
+  title?: string;
+  autoPlay?: boolean;
+}
+
+const DropboxVideoPlayer = ({ 
+  videoUrl, 
+  lessonKey,
+  onVideoEnd, 
+  onVideoStart, 
+  title, 
+  autoPlay = false 
+}: EnhancedVideoPlayerProps) => {
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { updateWatchTime, getLessonProgress } = useProgress();
+  const lastTimeRef = useRef(0);
+
+  const getDirectDropboxUrl = (url: string) => {
+    if (url.includes('dropbox.com') && url.includes('dl=0')) {
+      return url.replace('dl=0', 'dl=1');
+    }
+    return url;
+  };
+
+  useEffect(() => {
+    if (autoPlay && videoRef.current) {
+      videoRef.current.play();
+    }
+  }, [autoPlay]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateProgress = () => {
+      const currentTimeValue = video.currentTime;
+      const watchedTime = currentTimeValue - lastTimeRef.current;
+      
+      if (watchedTime > 0 && watchedTime < 5) { // Prevent huge jumps
+        updateWatchTime(lessonKey, watchedTime, video.duration);
+      }
+      
+      lastTimeRef.current = currentTimeValue;
+      setCurrentTime(currentTimeValue);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+      
+      // Resume from saved position
+      const lessonProgress = getLessonProgress(lessonKey);
+      if (lessonProgress && lessonProgress.lastPosition > 0) {
+        video.currentTime = lessonProgress.lastPosition;
+      }
+    };
+
+    video.addEventListener('timeupdate', updateProgress);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    return () => {
+      video.removeEventListener('timeupdate', updateProgress);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [lessonKey, updateWatchTime, getLessonProgress]);
+
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+        onVideoStart?.();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleSeek = (value: number[]) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = value[0];
+      setCurrentTime(value[0]);
+    }
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0];
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      const newMuted = !isMuted;
+      setIsMuted(newMuted);
+      videoRef.current.muted = newMuted;
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (containerRef.current) {
+      if (!isFullscreen) {
+        containerRef.current.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+      setIsFullscreen(!isFullscreen);
+    }
+  };
+
+  const skipTime = (seconds: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(0, Math.min(videoRef.current.currentTime + seconds, duration));
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const lessonProgress = getLessonProgress(lessonKey);
+  const completionRate = lessonProgress ? (lessonProgress.watchTime / duration) * 100 : 0;
+
+  const directUrl = getDirectDropboxUrl(videoUrl);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative w-full h-full bg-black rounded-lg overflow-hidden group"
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      <video
+        ref={videoRef}
+        className="w-full h-full object-contain"
+        onPlay={() => {
+          setIsPlaying(true);
+          onVideoStart?.();
+        }}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => {
+          setIsPlaying(false);
+          onVideoEnd?.();
+        }}
+        preload="metadata"
+        playsInline
+        autoPlay={autoPlay}
+      >
+        <source src={directUrl} type="video/mp4" />
+        Seu navegador não suporta o elemento de vídeo.
+      </video>
+      
+      {/* Progress Bar at Top */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-black/20">
+        <div 
+          className="h-full bg-primary transition-all duration-100"
+          style={{ width: `${progressPercentage}%` }}
+        />
+        {lessonProgress && (
+          <div 
+            className="absolute top-0 h-full bg-primary/40"
+            style={{ width: `${completionRate}%` }}
+          />
+        )}
+      </div>
+
+      {/* Custom Controls */}
+      {showControls && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20">
+          {/* Center Play/Pause */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={handlePlayPause}
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-4"
+            >
+              {isPlaying ? (
+                <Pause className="h-8 w-8" />
+              ) : (
+                <Play className="h-8 w-8 ml-1" />
+              )}
+            </Button>
+
+            {/* Skip Controls */}
+            <div className="absolute right-4 flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => skipTime(-10)}
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => skipTime(10)}
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full"
+              >
+                <SkipForward className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Bottom Controls */}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePlayPause}
+                className="text-white hover:bg-white/20"
+              >
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </Button>
+
+              <div className="flex-1 flex items-center gap-2">
+                <span className="text-white text-sm">{formatTime(currentTime)}</span>
+                <Slider
+                  value={[currentTime]}
+                  max={duration}
+                  step={1}
+                  onValueChange={handleSeek}
+                  className="flex-1"
+                />
+                <span className="text-white text-sm">{formatTime(duration)}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleMute}
+                  className="text-white hover:bg-white/20"
+                >
+                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </Button>
+                
+                <Slider
+                  value={[volume]}
+                  max={1}
+                  step={0.1}
+                  onValueChange={handleVolumeChange}
+                  className="w-20"
+                />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleFullscreen}
+                  className="text-white hover:bg-white/20"
+                >
+                  <Maximize className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Title Overlay */}
+      {title && showControls && (
+        <div className="absolute top-4 left-4 right-4">
+          <h3 className="text-white text-lg font-medium drop-shadow-lg">
+            {title}
+          </h3>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const EnhancedVideoPlayer = (props: EnhancedVideoPlayerProps) => {
+  // Check if it's a YouTube URL
+  if (isYouTubeUrl(props.videoUrl)) {
+    const videoId = extractYouTubeId(props.videoUrl);
+    if (videoId) {
+      return (
+        <YouTubePlayer
+          videoId={videoId}
+          onVideoEnd={props.onVideoEnd || (() => {})}
+          onVideoStart={props.onVideoStart || (() => {})}
+        />
+      );
+    }
+  }
+
+  // Default to enhanced Dropbox/direct video player
+  return <DropboxVideoPlayer {...props} />;
+};
