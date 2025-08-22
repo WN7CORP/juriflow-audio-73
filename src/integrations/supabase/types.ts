@@ -3548,6 +3548,7 @@ export type Database = {
       "VIDEO-AULAS-DIAS": {
         Row: {
           Aula: string | null
+          capa: string | null
           conteudo: string | null
           Dia: string | null
           id: number
@@ -3556,6 +3557,7 @@ export type Database = {
         }
         Insert: {
           Aula?: string | null
+          capa?: string | null
           conteudo?: string | null
           Dia?: string | null
           id?: number
@@ -3564,6 +3566,7 @@ export type Database = {
         }
         Update: {
           Aula?: string | null
+          capa?: string | null
           conteudo?: string | null
           Dia?: string | null
           id?: number
