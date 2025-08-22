@@ -14,17 +14,17 @@ export const LessonHeader = ({ lesson, onBack, isMobile = false }: LessonHeaderP
   if (isMobile) {
     return (
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border animate-slide-in-right">
-        <div className="flex items-center justify-between p-3">
+        <div className="flex items-center justify-between p-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="p-2 hover:bg-muted/80 transition-all duration-200 hover:scale-105"
+            className="p-2 hover:bg-muted/80 transition-all duration-200 hover:scale-105 animate-fade-in"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs px-2 py-1 animate-fade-in">
+          <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <Badge variant="outline" className="text-sm px-3 py-1.5 font-medium">
               Dia {lesson.Dia} - Aula {lesson.Aula}
             </Badge>
           </div>
@@ -39,13 +39,13 @@ export const LessonHeader = ({ lesson, onBack, isMobile = false }: LessonHeaderP
         variant="ghost"
         size="sm"
         onClick={onBack}
-        className="p-2 hover:bg-muted/80 transition-all duration-200 hover:scale-105"
+        className="p-2 hover:bg-muted/80 transition-all duration-200 hover:scale-105 animate-fade-in"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-5 w-5" />
       </Button>
-      <div className="flex items-center gap-2 animate-fade-in">
-        <BookOpen className="h-5 w-5 text-primary" />
-        <Badge variant="outline" className="animate-scale-in">
+      <div className="flex items-center gap-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <BookOpen className="h-6 w-6 text-primary animate-scale-in" style={{ animationDelay: '200ms' }} />
+        <Badge variant="outline" className="text-base px-4 py-2 font-medium animate-scale-in" style={{ animationDelay: '300ms' }}>
           Dia {lesson.Dia} - Aula {lesson.Aula}
         </Badge>
       </div>

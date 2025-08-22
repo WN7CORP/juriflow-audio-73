@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { YouTubePlayer } from './YouTubePlayer';
 import { isYouTubeUrl, extractYouTubeId } from '@/lib/utils';
@@ -50,21 +51,48 @@ const DropboxVideoPlayer = ({
     return url;
   };
 
+  // Reset all states when video URL or lesson changes
+  useEffect(() => {
+    console.log('Video URL or lesson changed, resetting states');
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setIsLoading(true);
+    setCanPlay(false);
+    setShowControls(true);
+    
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+      
+      // Force reload the video source
+      const directUrl = getDirectDropboxUrl(videoUrl);
+      if (directUrl && video.src !== directUrl) {
+        video.src = directUrl;
+        video.load();
+      }
+    }
+  }, [videoUrl, lessonKey]);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleLoadStart = () => {
+      console.log('Video load started');
       setIsLoading(true);
       setCanPlay(false);
     };
 
     const handleCanPlay = () => {
+      console.log('Video can play');
       setIsLoading(false);
       setCanPlay(true);
     };
 
     const handleLoadedMetadata = () => {
+      console.log('Video metadata loaded');
       const videoDuration = video.duration;
       setDuration(videoDuration);
       onDurationChange?.(videoDuration);
@@ -74,12 +102,17 @@ const DropboxVideoPlayer = ({
       if (lessonProgress && lessonProgress.lastPosition > 0 && lessonProgress.lastPosition < videoDuration * 0.9) {
         video.currentTime = lessonProgress.lastPosition;
       }
+    };
 
+    const handleCanPlayThrough = () => {
+      console.log('Video can play through, autoPlay:', autoPlay);
       // Auto-play if enabled and can play
       if (autoPlay && canPlay) {
         video.play().then(() => {
+          console.log('Auto-play started');
           setIsLoading(false);
-        }).catch(() => {
+        }).catch((error) => {
+          console.log('Auto-play failed:', error);
           setIsLoading(false);
         });
       }
@@ -96,16 +129,19 @@ const DropboxVideoPlayer = ({
     };
 
     const handlePlay = () => {
+      console.log('Video playing');
       setIsPlaying(true);
       setIsLoading(false);
       onVideoStart?.();
     };
 
     const handlePause = () => {
+      console.log('Video paused');
       setIsPlaying(false);
     };
 
     const handleEnded = () => {
+      console.log('Video ended');
       setIsPlaying(false);
       updateLessonProgress(lessonKey, 100, duration, duration);
       onVideoEnd?.();
@@ -119,8 +155,14 @@ const DropboxVideoPlayer = ({
       setIsLoading(false);
     };
 
+    const handleError = (e: Event) => {
+      console.error('Video error:', e);
+      setIsLoading(false);
+    };
+
     video.addEventListener('loadstart', handleLoadStart);
     video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('canplaythrough', handleCanPlayThrough);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('play', handlePlay);
@@ -128,10 +170,12 @@ const DropboxVideoPlayer = ({
     video.addEventListener('ended', handleEnded);
     video.addEventListener('waiting', handleWaiting);
     video.addEventListener('playing', handlePlaying);
+    video.addEventListener('error', handleError);
 
     return () => {
       video.removeEventListener('loadstart', handleLoadStart);
       video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('canplaythrough', handleCanPlayThrough);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('play', handlePlay);
@@ -139,6 +183,7 @@ const DropboxVideoPlayer = ({
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('waiting', handleWaiting);
       video.removeEventListener('playing', handlePlaying);
+      video.removeEventListener('error', handleError);
     };
   }, [lessonKey, duration, autoPlay, canPlay, updateLessonProgress, getLessonProgress, onVideoStart, onVideoEnd, onDurationChange]);
 
@@ -209,7 +254,7 @@ const DropboxVideoPlayer = ({
     return (
       <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center animate-fade-in">
         <div className="text-white text-center">
-          <p className="text-lg mb-2">Vídeo não disponível</p>
+          <p className="text-base lg:text-lg mb-2">Vídeo não disponível</p>
           <p className="text-sm text-gray-400">O link do vídeo não foi encontrado</p>
         </div>
       </div>
@@ -225,18 +270,21 @@ const DropboxVideoPlayer = ({
     >
       <video
         ref={videoRef}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain transition-opacity duration-300"
         preload="metadata"
         playsInline
+        src={directUrl}
       >
-        <source src={directUrl} type="video/mp4" />
         Seu navegador não suporta o elemento de vídeo.
       </video>
       
       {/* Loading Spinner */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 animate-fade-in">
-          <Loader2 className="h-8 w-8 text-white animate-spin" />
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 lg:h-10 lg:w-10 text-white animate-spin mx-auto mb-2" />
+            <p className="text-white text-sm lg:text-base">Carregando vídeo...</p>
+          </div>
         </div>
       )}
       
@@ -263,22 +311,22 @@ const DropboxVideoPlayer = ({
               variant="ghost"
               size="lg"
               onClick={handlePlayPause}
-              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-4 transition-all duration-200 hover:scale-110"
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-3 lg:p-4 transition-all duration-200 hover:scale-110 animate-scale-in"
             >
               {isPlaying ? (
-                <Pause className="h-6 w-6 lg:h-8 lg:w-8" />
+                <Pause className="h-5 w-5 lg:h-8 lg:w-8" />
               ) : (
-                <Play className="h-6 w-6 lg:h-8 lg:w-8 ml-1" />
+                <Play className="h-5 w-5 lg:h-8 lg:w-8 ml-1" />
               )}
             </Button>
 
             {/* Skip Controls */}
-            <div className="absolute right-4 flex gap-2">
+            <div className="absolute right-3 lg:right-4 flex gap-1 lg:gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => skipTime(-10)}
-                className="bg-black/50 hover:bg-black/70 text-white rounded-full transition-all duration-200 hover:scale-110"
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
               >
                 <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
@@ -286,7 +334,7 @@ const DropboxVideoPlayer = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => skipTime(10)}
-                className="bg-black/50 hover:bg-black/70 text-white rounded-full transition-all duration-200 hover:scale-110"
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
               >
                 <SkipForward className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
@@ -295,18 +343,18 @@ const DropboxVideoPlayer = ({
 
           {/* Bottom Controls */}
           <div className="absolute bottom-0 left-0 right-0 p-2 lg:p-4">
-            <div className="flex items-center gap-2 lg:gap-4">
+            <div className="flex items-center gap-1 lg:gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handlePlayPause}
-                className="text-white hover:bg-white/20 transition-colors duration-200"
+                className="text-white hover:bg-white/20 transition-colors duration-200 p-1 lg:p-2"
               >
                 {isPlaying ? <Pause className="h-3 w-3 lg:h-4 lg:w-4" /> : <Play className="h-3 w-3 lg:h-4 lg:w-4" />}
               </Button>
 
               <div className="flex-1 flex items-center gap-1 lg:gap-2">
-                <span className="text-white text-xs lg:text-sm">{formatTime(currentTime)}</span>
+                <span className="text-white text-xs lg:text-sm min-w-[35px] lg:min-w-[45px]">{formatTime(currentTime)}</span>
                 <Slider
                   value={[currentTime]}
                   max={duration}
@@ -314,7 +362,7 @@ const DropboxVideoPlayer = ({
                   onValueChange={handleSeek}
                   className="flex-1"
                 />
-                <span className="text-white text-xs lg:text-sm">{formatTime(duration)}</span>
+                <span className="text-white text-xs lg:text-sm min-w-[35px] lg:min-w-[45px]">{formatTime(duration)}</span>
               </div>
 
               <div className="flex items-center gap-1 lg:gap-2">
@@ -322,7 +370,7 @@ const DropboxVideoPlayer = ({
                   variant="ghost"
                   size="sm"
                   onClick={toggleMute}
-                  className="text-white hover:bg-white/20 transition-colors duration-200"
+                  className="text-white hover:bg-white/20 transition-colors duration-200 p-1 lg:p-2"
                 >
                   {isMuted ? <VolumeX className="h-3 w-3 lg:h-4 lg:w-4" /> : <Volume2 className="h-3 w-3 lg:h-4 lg:w-4" />}
                 </Button>
@@ -332,14 +380,14 @@ const DropboxVideoPlayer = ({
                   max={1}
                   step={0.1}
                   onValueChange={handleVolumeChange}
-                  className="w-12 lg:w-20"
+                  className="w-10 lg:w-20"
                 />
 
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={toggleFullscreen}
-                  className="text-white hover:bg-white/20 transition-colors duration-200"
+                  className="text-white hover:bg-white/20 transition-colors duration-200 p-1 lg:p-2"
                 >
                   <Maximize className="h-3 w-3 lg:h-4 lg:w-4" />
                 </Button>
@@ -352,7 +400,7 @@ const DropboxVideoPlayer = ({
       {/* Title Overlay */}
       {title && showControls && !isLoading && (
         <div className="absolute top-4 left-4 right-4 animate-fade-in">
-          <h3 className="text-white text-sm lg:text-lg font-medium drop-shadow-lg">
+          <h3 className="text-white text-sm lg:text-lg font-medium drop-shadow-lg line-clamp-2">
             {title}
           </h3>
         </div>

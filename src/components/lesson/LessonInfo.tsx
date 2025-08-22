@@ -26,26 +26,26 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
   };
 
   return (
-    <div className="p-3 lg:p-6 animate-fade-in">
-      <div className="flex items-start justify-between mb-3">
+    <div className="p-4 lg:p-6 animate-fade-in">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
-          <h1 className="text-base lg:text-xl font-bold text-foreground mb-2 line-clamp-2 leading-tight">
+          <h1 className="text-lg lg:text-2xl font-bold text-foreground mb-3 line-clamp-2 leading-tight">
             {lesson.Tema}
           </h1>
           
-          <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm text-muted-foreground mb-3">
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3 lg:h-4 lg:w-4" />
-              <span>{formatDuration(duration)}</span>
+          <div className="flex flex-wrap items-center gap-3 text-sm lg:text-base text-muted-foreground mb-4">
+            <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-full">
+              <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
+              <span className="font-medium">{formatDuration(duration)}</span>
             </div>
             {progressPercent > 0 && (
-              <div className="flex items-center gap-1">
-                <span>{Math.round(progressPercent)}% assistido</span>
+              <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
+                <span className="font-medium text-primary">{Math.round(progressPercent)}% assistido</span>
               </div>
             )}
             {isCompleted && (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs animate-scale-in">
-                <CheckCircle2 className="h-3 w-3 mr-1" />
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-sm lg:text-base px-3 py-1.5 animate-scale-in">
+                <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
                 Concluída
               </Badge>
             )}
@@ -55,28 +55,28 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
 
       {/* Progress Bar */}
       {progressPercent > 0 && (
-        <div className="mb-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-muted-foreground">Seu progresso</span>
-            <span className="text-xs font-medium">{Math.round(progressPercent)}%</span>
+        <div className="mb-5 lg:mb-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm lg:text-base text-muted-foreground font-medium">Seu progresso</span>
+            <span className="text-sm lg:text-base font-semibold text-primary">{Math.round(progressPercent)}%</span>
           </div>
-          <Progress value={progressPercent} className="h-1.5 lg:h-2" />
+          <Progress value={progressPercent} className="h-2 lg:h-3 animate-scale-in" style={{ animationDelay: '300ms' }} />
         </div>
       )}
 
       {/* Description - Expandable on mobile */}
       {lesson.conteudo && (
-        <div className="mb-4 animate-fade-in" style={{ animationDelay: '400ms' }}>
+        <div className="mb-5 lg:mb-6 animate-fade-in" style={{ animationDelay: '400ms' }}>
           <Button
             variant="ghost"
-            className="p-0 h-auto font-semibold text-left lg:cursor-default text-sm hover:bg-transparent"
+            className="p-0 h-auto font-semibold text-left lg:cursor-default text-base lg:text-lg hover:bg-transparent mb-3"
             onClick={() => setShowDescription(!showDescription)}
           >
             <span>Sobre esta aula</span>
-            <ChevronDown className={`ml-1 h-3 w-3 lg:hidden transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`ml-2 h-4 w-4 lg:hidden transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`} />
           </Button>
-          <div className={`mt-2 text-muted-foreground text-xs lg:text-sm leading-relaxed transition-all duration-300 ${
-            showDescription ? 'block max-h-none' : 'line-clamp-2 lg:block lg:max-h-none'
+          <div className={`text-muted-foreground text-sm lg:text-base leading-relaxed transition-all duration-300 bg-muted/30 p-3 lg:p-4 rounded-lg ${
+            showDescription ? 'block max-h-none' : 'line-clamp-3 lg:block lg:max-h-none'
           }`}>
             {lesson.conteudo}
           </div>
@@ -84,7 +84,7 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
             <Button
               variant="ghost"
               size="sm"
-              className="lg:hidden mt-1 p-0 h-auto text-xs text-primary hover:bg-transparent"
+              className="lg:hidden mt-2 p-0 h-auto text-sm text-primary hover:bg-transparent font-medium"
               onClick={() => setShowDescription(true)}
             >
               Ver mais

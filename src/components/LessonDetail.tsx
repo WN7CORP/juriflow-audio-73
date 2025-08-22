@@ -27,6 +27,7 @@ export const LessonDetail = ({
   const { completedLessons, getLessonProgress, getCompletionRate } = useProgress();
   const [lessonDuration, setLessonDuration] = useState(0);
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   const lessonKey = lesson.id?.toString() || '';
   const isCompleted = completedLessons.has(lessonKey);
@@ -38,7 +39,7 @@ export const LessonDetail = ({
       console.log('Starting auto-advance timer');
       const timer = setTimeout(() => {
         console.log('Auto-advancing to next lesson');
-        onNextLesson();
+        handleNextClick();
       }, 3000);
       setAutoAdvanceTimer(timer);
     }
@@ -57,6 +58,15 @@ export const LessonDetail = ({
     };
   }, [autoAdvanceTimer, lesson.id]);
 
+  // Reset transition state when lesson changes
+  useEffect(() => {
+    setIsTransitioning(false);
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      setAutoAdvanceTimer(null);
+    }
+  }, [lesson.id]);
+
   // Clear timer when user manually navigates
   const handleManualNavigation = (navigationFn: () => void) => {
     console.log('Manual navigation triggered');
@@ -64,7 +74,12 @@ export const LessonDetail = ({
       clearTimeout(autoAdvanceTimer);
       setAutoAdvanceTimer(null);
     }
-    navigationFn();
+    setIsTransitioning(true);
+    
+    // Small delay for smooth transition
+    setTimeout(() => {
+      navigationFn();
+    }, 100);
   };
 
   const handleNextClick = () => {
@@ -96,13 +111,14 @@ export const LessonDetail = ({
             <LessonHeader lesson={lesson} onBack={onBack} isMobile={false} />
           </div>
 
-          {/* Video Player Container */}
-          <div className="relative bg-black">
+          {/* Video Player Container with transition */}
+          <div className={`relative bg-black transition-opacity duration-300 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}>
             <EnhancedVideoPlayer
+              key={`${lesson.id}-${lesson.video}`} // Force re-render when lesson changes
               videoUrl={lesson.video || ''}
               lessonKey={lessonKey}
               onVideoEnd={handleVideoComplete}
-              onVideoStart={() => console.log('Video started')}
+              onVideoStart={() => console.log('Video started:', lesson.Tema)}
               title={lesson.Tema}
               autoPlay={true}
               onDurationChange={handleDurationChange}
