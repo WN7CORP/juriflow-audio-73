@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { YouTubePlayer } from './YouTubePlayer';
 import { isYouTubeUrl, extractYouTubeId } from '@/lib/utils';
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, SkipForward, Loader2 } from 'lucide-react';
@@ -14,6 +15,7 @@ interface EnhancedVideoPlayerProps {
   title?: string;
   autoPlay?: boolean;
   onDurationChange?: (duration: number) => void;
+  playbackSpeed?: number;
 }
 
 const DropboxVideoPlayer = ({ 
@@ -23,7 +25,8 @@ const DropboxVideoPlayer = ({
   onVideoStart, 
   title, 
   autoPlay = true,
-  onDurationChange
+  onDurationChange,
+  playbackSpeed = 1
 }: EnhancedVideoPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -37,6 +40,7 @@ const DropboxVideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const progressUpdateRef = useRef<NodeJS.Timeout | null>(null);
   const { updateLessonProgress, getLessonProgress } = useProgress();
 
   const getDirectDropboxUrl = (url: string) => {
@@ -51,6 +55,21 @@ const DropboxVideoPlayer = ({
     return url;
   };
 
+  // Debounced progress update function
+  const debouncedProgressUpdate = useCallback((currentTimeValue: number, videoDuration: number) => {
+    if (progressUpdateRef.current) {
+      clearTimeout(progressUpdateRef.current);
+    }
+    
+    progressUpdateRef.current = setTimeout(() => {
+      if (videoDuration > 0) {
+        const progressPercent = (currentTimeValue / videoDuration) * 100;
+        console.log('Updating progress:', { currentTimeValue, videoDuration, progressPercent });
+        updateLessonProgress(lessonKey, progressPercent, currentTimeValue, videoDuration);
+      }
+    }, 2000); // Update every 2 seconds instead of real-time
+  }, [lessonKey, updateLessonProgress]);
+
   // Auto-hide controls when playing
   const hideControlsAfterDelay = () => {
     if (controlsTimeoutRef.current) {
@@ -61,7 +80,7 @@ const DropboxVideoPlayer = ({
       if (isPlaying) {
         setShowControls(false);
       }
-    }, 3000); // Hide after 3 seconds
+    }, 3000);
   };
 
   const showControlsTemporarily = () => {
@@ -81,15 +100,19 @@ const DropboxVideoPlayer = ({
     setCanPlay(false);
     setShowControls(true);
     
-    // Clear any existing timeout
+    // Clear any existing timeouts
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
+    }
+    if (progressUpdateRef.current) {
+      clearTimeout(progressUpdateRef.current);
     }
     
     const video = videoRef.current;
     if (video) {
       video.pause();
       video.currentTime = 0;
+      video.playbackRate = playbackSpeed;
       
       // Force reload the video source
       const directUrl = getDirectDropboxUrl(videoUrl);
@@ -99,6 +122,14 @@ const DropboxVideoPlayer = ({
       }
     }
   }, [videoUrl, lessonKey]);
+
+  // Update playback speed when it changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && playbackSpeed) {
+      video.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed]);
 
   // Handle controls auto-hide when playing state changes
   useEffect(() => {
@@ -114,6 +145,9 @@ const DropboxVideoPlayer = ({
     return () => {
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
+      }
+      if (progressUpdateRef.current) {
+        clearTimeout(progressUpdateRef.current);
       }
     };
   }, [isPlaying]);
@@ -133,7 +167,6 @@ const DropboxVideoPlayer = ({
       setIsLoading(false);
       setCanPlay(true);
       
-      // Immediately try to play when video can play
       if (autoPlay) {
         video.play().then(() => {
           console.log('Auto-play started on canPlay');
@@ -155,20 +188,7 @@ const DropboxVideoPlayer = ({
       const lessonProgress = getLessonProgress(lessonKey);
       if (lessonProgress && lessonProgress.lastPosition > 0 && lessonProgress.lastPosition < videoDuration * 0.9) {
         video.currentTime = lessonProgress.lastPosition;
-      }
-    };
-
-    const handleCanPlayThrough = () => {
-      console.log('Video can play through, autoPlay:', autoPlay);
-      // Auto-play if enabled and can play
-      if (autoPlay) {
-        video.play().then(() => {
-          console.log('Auto-play started on canPlayThrough');
-          setIsLoading(false);
-        }).catch((error) => {
-          console.log('Auto-play failed on canPlayThrough:', error);
-          setIsLoading(false);
-        });
+        setCurrentTime(lessonProgress.lastPosition);
       }
     };
 
@@ -176,10 +196,8 @@ const DropboxVideoPlayer = ({
       const currentTimeValue = video.currentTime;
       setCurrentTime(currentTimeValue);
       
-      if (duration > 0) {
-        const progressPercent = (currentTimeValue / duration) * 100;
-        updateLessonProgress(lessonKey, progressPercent, currentTimeValue, duration);
-      }
+      // Use debounced update for progress
+      debouncedProgressUpdate(currentTimeValue, video.duration);
     };
 
     const handlePlay = () => {
@@ -192,12 +210,24 @@ const DropboxVideoPlayer = ({
     const handlePause = () => {
       console.log('Video paused');
       setIsPlaying(false);
+      
+      // Force update progress when paused
+      if (progressUpdateRef.current) {
+        clearTimeout(progressUpdateRef.current);
+      }
+      const currentTimeValue = video.currentTime;
+      const videoDuration = video.duration;
+      if (videoDuration > 0) {
+        const progressPercent = (currentTimeValue / videoDuration) * 100;
+        updateLessonProgress(lessonKey, progressPercent, currentTimeValue, videoDuration);
+      }
     };
 
     const handleEnded = () => {
       console.log('Video ended');
       setIsPlaying(false);
-      updateLessonProgress(lessonKey, 100, duration, duration);
+      const videoDuration = video.duration;
+      updateLessonProgress(lessonKey, 100, videoDuration, videoDuration);
       onVideoEnd?.();
     };
 
@@ -216,7 +246,6 @@ const DropboxVideoPlayer = ({
 
     video.addEventListener('loadstart', handleLoadStart);
     video.addEventListener('canplay', handleCanPlay);
-    video.addEventListener('canplaythrough', handleCanPlayThrough);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('play', handlePlay);
@@ -229,7 +258,6 @@ const DropboxVideoPlayer = ({
     return () => {
       video.removeEventListener('loadstart', handleLoadStart);
       video.removeEventListener('canplay', handleCanPlay);
-      video.removeEventListener('canplaythrough', handleCanPlayThrough);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('play', handlePlay);
@@ -239,7 +267,7 @@ const DropboxVideoPlayer = ({
       video.removeEventListener('playing', handlePlaying);
       video.removeEventListener('error', handleError);
     };
-  }, [lessonKey, duration, autoPlay, canPlay, updateLessonProgress, getLessonProgress, onVideoStart, onVideoEnd, onDurationChange]);
+  }, [lessonKey, autoPlay, getLessonProgress, onVideoStart, onVideoEnd, onDurationChange, updateLessonProgress, debouncedProgressUpdate]);
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -300,7 +328,7 @@ const DropboxVideoPlayer = ({
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
   const lessonProgress = getLessonProgress(lessonKey);
-  const completionRate = lessonProgress ? (lessonProgress.watchTime / duration) * 100 : 0;
+  const completionRate = lessonProgress && duration > 0 ? (lessonProgress.watchTime / duration) * 100 : 0;
 
   const directUrl = getDirectDropboxUrl(videoUrl);
 
@@ -348,16 +376,16 @@ const DropboxVideoPlayer = ({
         </div>
       )}
       
-      {/* Progress Bar at Top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-black/20 z-40">
+      {/* Progress Bar at Top - Always visible for better mobile UX */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 lg:h-1 bg-black/30 z-40">
         <div 
-          className="h-full bg-primary transition-all duration-100"
-          style={{ width: `${progressPercentage}%` }}
+          className="h-full bg-primary transition-all duration-200"
+          style={{ width: `${Math.max(progressPercentage, 1)}%` }}
         />
-        {lessonProgress && (
+        {lessonProgress && completionRate > 0 && (
           <div 
             className="absolute top-0 h-full bg-primary/40"
-            style={{ width: `${completionRate}%` }}
+            style={{ width: `${Math.max(completionRate, 1)}%` }}
           />
         )}
       </div>
@@ -423,7 +451,7 @@ const DropboxVideoPlayer = ({
                 onValueChange={handleSeek}
                 className="flex-1"
               />
-              <span className="text-white text-xs lg:text-sm min-w-[35px] lg:min-w-[45px]">{formatTime(duration)}</span>
+              <span className="text-white text-xs lg:text-sm min-w-[35px] lg:min-w-[45px]">{formatTime(duration || 0)}</span>
             </div>
 
             <div className="flex items-center gap-1 lg:gap-2">
@@ -441,7 +469,7 @@ const DropboxVideoPlayer = ({
                 max={1}
                 step={0.1}
                 onValueChange={handleVolumeChange}
-                className="w-10 lg:w-20"
+                className="w-10 lg:w-20 hidden sm:block"
               />
 
               <Button

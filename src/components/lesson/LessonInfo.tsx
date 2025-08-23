@@ -35,6 +35,9 @@ export const LessonInfo = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Always show progress bar, even at 0%
+  const displayProgress = Math.max(progressPercent, 0);
+
   return (
     <div className="p-4 lg:p-6 animate-fade-in">
       <div className="flex items-start justify-between mb-4">
@@ -44,7 +47,7 @@ export const LessonInfo = ({
           </h1>
           
           {/* Area Badge */}
-          {lesson.Area && (
+          {lesson.Area && lesson.Area !== 'Área não informada' && (
             <div className="mb-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
               <Badge className="bg-primary/20 text-primary border-primary/30 text-xs lg:text-sm px-3 py-1.5 animate-scale-in">
                 <BookOpen className="h-3 w-3 lg:h-4 lg:w-4 mr-1.5" />
@@ -58,9 +61,9 @@ export const LessonInfo = ({
               <Clock className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               <span className="font-medium text-xs lg:text-sm">{formatDuration(duration)}</span>
             </div>
-            {progressPercent > 0 && (
+            {displayProgress > 0 && (
               <div className="flex items-center gap-1.5 lg:gap-2 bg-primary/10 px-2.5 lg:px-3 py-1.5 rounded-full animate-scale-in" style={{ animationDelay: '300ms' }}>
-                <span className="font-medium text-primary text-xs lg:text-sm">{Math.round(progressPercent)}% assistido</span>
+                <span className="font-medium text-primary text-xs lg:text-sm">{Math.round(displayProgress)}% assistido</span>
               </div>
             )}
             {isCompleted && (
@@ -82,20 +85,25 @@ export const LessonInfo = ({
         />
       </div>
 
-      {/* Progress Bar - Mobile Optimized */}
-      {progressPercent > 0 && (
-        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '600ms' }}>
-          <div className="flex justify-between items-center mb-2 lg:mb-3">
-            <span className="text-sm lg:text-base text-muted-foreground font-medium">Progresso da aula</span>
-            <span className="text-base lg:text-lg font-bold text-primary animate-scale-in">{Math.round(progressPercent)}%</span>
-          </div>
-          <Progress 
-            value={progressPercent} 
-            className="h-3 lg:h-4 animate-scale-in bg-secondary transition-all duration-500" 
-            style={{ animationDelay: '700ms' }} 
-          />
+      {/* Progress Bar - Always show, improved mobile visibility */}
+      <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '600ms' }}>
+        <div className="flex justify-between items-center mb-2 lg:mb-3">
+          <span className="text-sm lg:text-base text-muted-foreground font-medium">Progresso da aula</span>
+          <span className="text-base lg:text-lg font-bold text-primary animate-scale-in">
+            {Math.round(displayProgress)}%
+          </span>
         </div>
-      )}
+        <Progress 
+          value={displayProgress} 
+          className="h-4 lg:h-4 animate-scale-in bg-secondary transition-all duration-500" 
+          style={{ animationDelay: '700ms' }} 
+        />
+        {displayProgress === 0 && (
+          <p className="text-xs text-muted-foreground mt-1 animate-fade-in">
+            Comece a assistir para ver o progresso
+          </p>
+        )}
+      </div>
 
       {/* Description - Expandable on mobile */}
       {lesson.conteudo && (

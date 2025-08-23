@@ -31,7 +31,7 @@ const Index = () => {
           conteudo: item.conteudo || '',
           video: item.video || '',
           capa: item.capa || '',
-          modulo: item.modulo || '',
+          modulo: item.modulo || 'Módulo não informado',
           Nome: item.Tema || `Aula ${item.Aula}`,
           Link: item.video || '',
           Descricao: item.conteudo || 'Conteúdo não disponível',
