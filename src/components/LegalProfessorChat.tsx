@@ -24,7 +24,6 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -36,40 +35,19 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages]);
 
   useEffect(() => {
     if (isOpen && currentLesson) {
       const welcomeMessage: ChatMessage = {
         id: 'welcome',
-        text: `👩‍⚖️ Olá! Sou a Professora Dra. Maria Helena. Estou aqui para ajudá-lo com a aula "${currentLesson.Tema}" da área de ${currentLesson.Area || 'Direito'}. 
-
-📚 Pode me fazer qualquer pergunta sobre:
-• Conceitos jurídicos abordados
-• Interpretação de artigos de lei
-• Exemplos práticos
-• Jurisprudência relevante
-• Esclarecimento de dúvidas
-
-💡 Como posso ajudá-lo hoje?`,
+        text: `Olá! Sou a Professora Dra. Maria Helena. Estou aqui para ajudá-lo com a aula "${currentLesson.Tema}". Pode me fazer qualquer pergunta sobre o conteúdo jurídico abordado ou esclarecer dúvidas sobre os conceitos apresentados. Como posso ajudá-lo?`,
         sender: 'professor',
         timestamp: new Date(),
       };
       setMessages([welcomeMessage]);
     }
   }, [isOpen, currentLesson]);
-
-  const simulateTyping = async (text: string): Promise<void> => {
-    return new Promise((resolve) => {
-      setIsTyping(true);
-      // Simula tempo de digitação baseado no tamanho do texto
-      const typingTime = Math.min(text.length * 30, 3000);
-      setTimeout(() => {
-        setIsTyping(false);
-        resolve();
-      }, typingTime);
-    });
-  };
 
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -86,15 +64,12 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
     setIsLoading(true);
 
     try {
-      await simulateTyping("Analisando sua pergunta...");
-
       const { data, error } = await supabase.functions.invoke('chat-with-professor', {
         body: {
           message: inputValue,
           lessonContext: currentLesson ? {
             tema: currentLesson.Tema,
             conteudo: currentLesson.conteudo,
-            area: currentLesson.Area,
             dia: currentLesson.Dia,
             aula: currentLesson.Aula
           } : null
@@ -115,7 +90,7 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
       console.error('Error sending message:', error);
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: "😔 Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.",
+        text: "Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.",
         sender: 'professor',
         timestamp: new Date(),
       };
@@ -136,7 +111,7 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
     if (currentLesson) {
       const welcomeMessage: ChatMessage = {
         id: 'welcome-new',
-        text: `🔄 Vamos começar uma nova conversa sobre "${currentLesson.Tema}"! Como posso ajudá-lo?`,
+        text: `Olá novamente! Vamos começar uma nova conversa sobre "${currentLesson.Tema}". Como posso ajudá-lo?`,
         sender: 'professor',
         timestamp: new Date(),
       };
@@ -153,36 +128,30 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
     });
   };
 
-  // Só renderiza se estivermos em uma aula
-  if (!currentLesson) {
-    return null;
-  }
-
   return (
     <>
       <Button
         onClick={() => setIsOpen(true)}
         variant="outline"
         size="sm"
-        className="fixed bottom-6 right-6 z-50 rounded-full w-16 h-16 p-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 bg-gradient-to-r from-primary/20 to-purple-500/20 backdrop-blur border-primary/40 hover:bg-gradient-to-r hover:from-primary/30 hover:to-purple-500/30 animate-bounce"
-        style={{ animationDuration: '3s' }}
+        className="fixed bottom-6 right-6 z-50 rounded-full w-14 h-14 p-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 bg-primary/10 backdrop-blur border-primary/30 hover:bg-primary/20"
       >
-        <GraduationCap className="h-7 w-7 text-primary animate-pulse" />
+        <GraduationCap className="h-6 w-6 text-primary" />
       </Button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <Card className="w-full max-w-2xl h-[90vh] sm:h-[80vh] bg-background/98 backdrop-blur-xl border-primary/20 shadow-2xl animate-scale-in flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <Card className="w-full max-w-2xl h-[90vh] sm:h-[80vh] bg-background/95 backdrop-blur border-border shadow-2xl animate-scale-in flex flex-col">
             {/* Header */}
-            <div className="p-4 sm:p-6 border-b border-border/50 bg-gradient-to-r from-primary/10 to-purple-500/10 animate-slide-in-right">
+            <div className="p-4 sm:p-6 border-b border-border">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 animate-fade-in">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary/30 to-purple-500/30 rounded-full flex items-center justify-center animate-pulse">
-                    <GraduationCap className="h-6 w-6 text-primary" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <GraduationCap className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground animate-fade-in" style={{ animationDelay: '100ms' }}>👩‍⚖️ Dra. Maria Helena</h3>
-                    <p className="text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '200ms' }}>Professora de {currentLesson.Area || 'Direito'}</p>
+                    <h3 className="text-lg font-semibold text-foreground">Dra. Maria Helena</h3>
+                    <p className="text-sm text-muted-foreground">Professora de Direito</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -190,15 +159,15 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
                     variant="ghost"
                     size="sm"
                     onClick={clearChat}
-                    className="text-xs hover:bg-muted/80 transition-all duration-200 hover:scale-105"
+                    className="text-xs"
                   >
-                    🔄 Nova conversa
+                    Nova conversa
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsOpen(false)}
-                    className="h-8 w-8 p-0 hover:bg-muted/80 rounded-full transition-all duration-200 hover:scale-110"
+                    className="h-8 w-8 p-0 hover:bg-muted rounded-full"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -209,17 +178,16 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
             {/* Messages Area */}
             <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollRef}>
               <div className="space-y-4">
-                {messages.map((message, index) => (
+                {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
-                    style={{ animationDelay: `${index * 100}ms` }}
+                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] ${
+                      className={`max-w-[80%] rounded-lg p-3 ${
                         message.sender === 'user'
-                          ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg'
-                          : 'bg-gradient-to-r from-muted to-muted/80 text-foreground shadow-md border border-border/50'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
                       }`}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -233,15 +201,11 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
                     </div>
                   </div>
                 ))}
-                {isTyping && (
-                  <div className="flex justify-start animate-fade-in">
-                    <div className="bg-gradient-to-r from-muted to-muted/80 rounded-2xl p-4 flex items-center gap-3 shadow-md border border-border/50">
-                      <div className="flex space-x-1 animate-pulse">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">👩‍⚖️ Professora está analisando...</p>
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <p className="text-sm text-muted-foreground">Professora está digitando...</p>
                     </div>
                   </div>
                 )}
@@ -249,32 +213,28 @@ export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) =
             </ScrollArea>
 
             {/* Input Area */}
-            <div className="p-4 sm:p-6 border-t border-border/50 bg-gradient-to-r from-background/50 to-muted/20 animate-slide-in-right">
-              <div className="flex gap-3">
+            <div className="p-4 sm:p-6 border-t border-border">
+              <div className="flex gap-2">
                 <Input
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="💬 Digite sua dúvida jurídica..."
-                  disabled={isLoading || isTyping}
-                  className="flex-1 rounded-xl border-primary/20 focus:border-primary/50 transition-all duration-300 focus:shadow-lg"
+                  placeholder="Digite sua dúvida jurídica..."
+                  disabled={isLoading}
+                  className="flex-1"
                 />
                 <Button
                   onClick={sendMessage}
-                  disabled={!inputValue.trim() || isLoading || isTyping}
+                  disabled={!inputValue.trim() || isLoading}
                   size="sm"
-                  className="px-4 rounded-xl bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90 transition-all duration-300 hover:scale-105 shadow-lg disabled:opacity-50"
+                  className="px-3"
                 >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center animate-fade-in" style={{ animationDelay: '300ms' }}>
-                ⚡ Pressione Enter para enviar • 🤖 IA especializada em Direito
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Pressione Enter para enviar sua pergunta
               </p>
             </div>
           </Card>
