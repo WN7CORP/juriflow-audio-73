@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CourseModules } from "@/components/CourseModules";
@@ -6,7 +5,7 @@ import { LessonList } from "@/components/LessonList";
 import { LessonDetail } from "@/components/LessonDetail";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { Header } from "@/components/Header";
-import { HelpButton } from "@/components/HelpButton";
+import { LegalProfessorChat } from "@/components/LegalProfessorChat";
 import { Lesson } from "@/types/course";
 
 const Index = () => {
@@ -160,7 +159,7 @@ const Index = () => {
         </div>
       </main>
 
-      <HelpButton />
+      <LegalProfessorChat currentLesson={selectedLesson} />
     </div>
   );
 };
