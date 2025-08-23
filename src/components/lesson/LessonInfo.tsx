@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle2, ChevronDown, BookOpen } from "lucide-react";
+import { PlaybackSpeedControl } from "@/components/PlaybackSpeedControl";
 import { Lesson } from "@/types/course";
 import { useState } from "react";
 
@@ -11,9 +12,18 @@ interface LessonInfoProps {
   duration: number;
   progressPercent: number;
   isCompleted: boolean;
+  playbackSpeed: number;
+  onPlaybackSpeedChange: (speed: number) => void;
 }
 
-export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: LessonInfoProps) => {
+export const LessonInfo = ({ 
+  lesson, 
+  duration, 
+  progressPercent, 
+  isCompleted, 
+  playbackSpeed, 
+  onPlaybackSpeedChange 
+}: LessonInfoProps) => {
   const [showDescription, setShowDescription] = useState(false);
 
   const formatDuration = (seconds: number) => {
@@ -63,9 +73,18 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
         </div>
       </div>
 
+      {/* Playback Speed Control */}
+      <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '500ms' }}>
+        <PlaybackSpeedControl
+          currentSpeed={playbackSpeed}
+          onSpeedChange={onPlaybackSpeedChange}
+          className="justify-start"
+        />
+      </div>
+
       {/* Progress Bar - Mobile Optimized */}
       {progressPercent > 0 && (
-        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '500ms' }}>
+        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '600ms' }}>
           <div className="flex justify-between items-center mb-2 lg:mb-3">
             <span className="text-sm lg:text-base text-muted-foreground font-medium">Progresso da aula</span>
             <span className="text-base lg:text-lg font-bold text-primary animate-scale-in">{Math.round(progressPercent)}%</span>
@@ -73,14 +92,14 @@ export const LessonInfo = ({ lesson, duration, progressPercent, isCompleted }: L
           <Progress 
             value={progressPercent} 
             className="h-3 lg:h-4 animate-scale-in bg-secondary transition-all duration-500" 
-            style={{ animationDelay: '600ms' }} 
+            style={{ animationDelay: '700ms' }} 
           />
         </div>
       )}
 
       {/* Description - Expandable on mobile */}
       {lesson.conteudo && (
-        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '700ms' }}>
+        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '800ms' }}>
           <Button
             variant="ghost"
             className="p-0 h-auto font-semibold text-left lg:cursor-default text-base lg:text-lg hover:bg-transparent mb-2 lg:mb-3 transition-all duration-300 hover:text-primary"

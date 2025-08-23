@@ -28,6 +28,7 @@ export const LessonDetail = ({
   const [lessonDuration, setLessonDuration] = useState(0);
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   
   const lessonKey = lesson.id?.toString() || '';
   const isCompleted = completedLessons.has(lessonKey);
@@ -47,6 +48,11 @@ export const LessonDetail = ({
 
   const handleDurationChange = (duration: number) => {
     setLessonDuration(duration);
+  };
+
+  const handlePlaybackSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    // The video player component should handle the actual speed change
   };
 
   // Clear auto-advance timer when component unmounts or lesson changes
@@ -122,6 +128,7 @@ export const LessonDetail = ({
               title={lesson.Tema}
               autoPlay={true}
               onDurationChange={handleDurationChange}
+              playbackSpeed={playbackSpeed}
             />
           </div>
 
@@ -131,6 +138,8 @@ export const LessonDetail = ({
             duration={lessonDuration}
             progressPercent={progressPercent}
             isCompleted={isCompleted}
+            playbackSpeed={playbackSpeed}
+            onPlaybackSpeedChange={handlePlaybackSpeedChange}
           />
         </div>
 

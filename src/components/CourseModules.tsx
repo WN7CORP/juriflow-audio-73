@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { ModuleCard } from "./ModuleCard";
+import { SearchAndFilter } from "./SearchAndFilter";
 import { Module, Lesson } from "@/types/course";
 import { useProgress } from "@/hooks/useProgress";
 
@@ -11,13 +12,18 @@ interface CourseModulesProps {
 
 export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
   const [modules, setModules] = useState<Module[]>([]);
+  const [filteredLessons, setFilteredLessons] = useState<Lesson[]>(lessons);
   const { completedLessons } = useProgress();
+
+  useEffect(() => {
+    setFilteredLessons(lessons);
+  }, [lessons]);
 
   useEffect(() => {
     // Group lessons by day and create modules
     const moduleMap = new Map<string, Lesson[]>();
     
-    lessons.forEach(lesson => {
+    filteredLessons.forEach(lesson => {
       const day = lesson.Dia;
       if (!moduleMap.has(day)) {
         moduleMap.set(day, []);
@@ -53,9 +59,9 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
       });
 
     setModules(moduleList);
-  }, [lessons, completedLessons]);
+  }, [filteredLessons, completedLessons]);
 
-  if (modules.length === 0) {
+  if (lessons.length === 0) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center animate-fade-in">
@@ -116,69 +122,94 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
         </div>
       </div>
 
-      {/* Modules Grid - Enhanced with staggered animations */}
+      {/* Search and Filter Section */}
       <div className="container mx-auto px-4 sm:px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {modules.map((module, index) => (
-            <div 
-              key={module.day} 
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <ModuleCard
-                module={module}
-                onClick={() => onDayClick(module.day)}
-              />
-            </div>
-          ))}
-        </div>
+        <SearchAndFilter 
+          lessons={lessons}
+          onFilteredLessons={setFilteredLessons}
+        />
+
+        {/* Results Count */}
+        {filteredLessons.length !== lessons.length && (
+          <div className="mb-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {modules.length} módulos com {filteredLessons.length} aulas de {lessons.length} total
+            </p>
+          </div>
+        )}
+
+        {/* Modules Grid - Enhanced with staggered animations */}
+        {modules.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {modules.map((module, index) => (
+              <div 
+                key={module.day} 
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <ModuleCard
+                  module={module}
+                  onClick={() => onDayClick(module.day)}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg">
+              Nenhum módulo encontrado com os filtros aplicados.
+            </p>
+          </div>
+        )}
 
         {/* Progress Summary - Enhanced animations */}
-        <div className="mt-8 max-w-4xl mx-auto animate-fade-in" style={{ animationDelay: '1000ms' }}>
-          <div className="bg-card border border-border rounded-xl p-6 transition-all duration-500 hover:shadow-lg hover:border-primary/30">
-            <h3 className="text-lg font-semibold text-foreground mb-4 text-center transition-colors duration-300 hover:text-primary">
-              Progresso Geral
-            </h3>
-            
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1100ms' }}>
-                <div className="text-xl font-bold text-primary mb-1 transition-all duration-300 hover:scale-110">
-                  {Math.round((completedLessons.size / lessons.length) * 100)}%
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Concluído
-                </div>
-              </div>
+        {modules.length > 0 && (
+          <div className="mt-8 max-w-4xl mx-auto animate-fade-in" style={{ animationDelay: '1000ms' }}>
+            <div className="bg-card border border-border rounded-xl p-6 transition-all duration-500 hover:shadow-lg hover:border-primary/30">
+              <h3 className="text-lg font-semibold text-foreground mb-4 text-center transition-colors duration-300 hover:text-primary">
+                Progresso Geral
+              </h3>
               
-              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1200ms' }}>
-                <div className="text-xl font-bold text-green-500 mb-1 transition-all duration-300 hover:scale-110">
-                  {modules.filter(m => m.completedLessons === m.totalLessons).length}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1100ms' }}>
+                  <div className="text-xl font-bold text-primary mb-1 transition-all duration-300 hover:scale-110">
+                    {Math.round((completedLessons.size / lessons.length) * 100)}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Concluído
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Finalizados
+                
+                <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1200ms' }}>
+                  <div className="text-xl font-bold text-green-500 mb-1 transition-all duration-300 hover:scale-110">
+                    {modules.filter(m => m.completedLessons === m.totalLessons).length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Finalizados
+                  </div>
                 </div>
-              </div>
-              
-              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1300ms' }}>
-                <div className="text-xl font-bold text-amber-500 mb-1 transition-all duration-300 hover:scale-110">
-                  {modules.filter(m => m.completedLessons > 0 && m.completedLessons < m.totalLessons).length}
+                
+                <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1300ms' }}>
+                  <div className="text-xl font-bold text-amber-500 mb-1 transition-all duration-300 hover:scale-110">
+                    {modules.filter(m => m.completedLessons > 0 && m.completedLessons < m.totalLessons).length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Em Andamento
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Em Andamento
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1400ms' }}>
-                <div className="text-xl font-bold text-blue-500 mb-1 transition-all duration-300 hover:scale-110">
-                  {modules.filter(m => m.completedLessons === 0).length}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Novos
+                
+                <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1400ms' }}>
+                  <div className="text-xl font-bold text-blue-500 mb-1 transition-all duration-300 hover:scale-110">
+                    {modules.filter(m => m.completedLessons === 0).length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Novos
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
