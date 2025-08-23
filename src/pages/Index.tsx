@@ -24,7 +24,14 @@ const Index = () => {
 
       if (data) {
         const mappedLessons: Lesson[] = data.map(item => ({
-          ...item,
+          id: item.id,
+          Dia: item.Dia || '',
+          Aula: item.Aula || '',
+          Tema: item.Tema || `Aula ${item.Aula}`,
+          conteudo: item.conteudo || '',
+          video: item.video || '',
+          capa: item.capa || '',
+          modulo: item.modulo || '',
           Nome: item.Tema || `Aula ${item.Aula}`,
           Link: item.video || '',
           Descricao: item.conteudo || 'Conteúdo não disponível',
