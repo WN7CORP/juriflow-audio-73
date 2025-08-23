@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { GraduationCap, X, Send, Loader2, Sparkles } from "lucide-react";
+import { GraduationCap, X, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Lesson } from "@/types/course";
 
@@ -17,16 +17,13 @@ interface ChatMessage {
 
 interface LegalProfessorChatProps {
   currentLesson?: Lesson;
-  isVisible?: boolean;
 }
 
-export const LegalProfessorChat = ({ currentLesson, isVisible = false }: LegalProfessorChatProps) => {
+export const LegalProfessorChat = ({ currentLesson }: LegalProfessorChatProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [typingText, setTypingText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,51 +35,19 @@ export const LegalProfessorChat = ({ currentLesson, isVisible = false }: LegalPr
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages]);
 
   useEffect(() => {
     if (isOpen && currentLesson) {
       const welcomeMessage: ChatMessage = {
         id: 'welcome',
-        text: `👩‍⚖️ Olá! Sou a Professora Dra. Maria Helena. 📚 Estou aqui para ajudá-lo com a aula "${currentLesson.Tema}". 
-
-🎯 Pode me fazer qualquer pergunta sobre:
-✅ Conceitos jurídicos da aula
-⚖️ Jurisprudência relacionada
-📖 Interpretação de artigos
-💡 Exemplos práticos
-
-Como posso ajudá-lo hoje? 🤔`,
+        text: `Olá! Sou a Professora Dra. Maria Helena. Estou aqui para ajudá-lo com a aula "${currentLesson.Tema}". Pode me fazer qualquer pergunta sobre o conteúdo jurídico abordado ou esclarecer dúvidas sobre os conceitos apresentados. Como posso ajudá-lo?`,
         sender: 'professor',
         timestamp: new Date(),
       };
       setMessages([welcomeMessage]);
     }
   }, [isOpen, currentLesson]);
-
-  const typeMessage = async (text: string) => {
-    setIsTyping(true);
-    setTypingText("");
-    
-    const words = text.split(' ');
-    let currentText = "";
-    
-    for (let i = 0; i < words.length; i++) {
-      currentText += (i === 0 ? '' : ' ') + words[i];
-      setTypingText(currentText);
-      
-      // Velocidade variável baseada no tamanho da palavra
-      const delay = words[i].length > 3 ? 150 : 100;
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-    
-    // Pequena pausa antes de mostrar a mensagem final
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setIsTyping(false);
-    setTypingText("");
-    
-    return text;
-  };
 
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -113,12 +78,9 @@ Como posso ajudá-lo hoje? 🤔`,
 
       if (error) throw error;
 
-      // Animar a digitação da resposta
-      const finalText = await typeMessage(data.response);
-
       const professorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: finalText,
+        text: data.response,
         sender: 'professor',
         timestamp: new Date(),
       };
@@ -126,12 +88,9 @@ Como posso ajudá-lo hoje? 🤔`,
       setMessages(prev => [...prev, professorMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorText = "😔 Desculpe, ocorreu um erro ao processar sua pergunta. ⚠️ Tente novamente em alguns instantes. 🔄";
-      const finalErrorText = await typeMessage(errorText);
-      
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: finalErrorText,
+        text: "Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.",
         sender: 'professor',
         timestamp: new Date(),
       };
@@ -152,9 +111,7 @@ Como posso ajudá-lo hoje? 🤔`,
     if (currentLesson) {
       const welcomeMessage: ChatMessage = {
         id: 'welcome-new',
-        text: `🔄 Olá novamente! Vamos começar uma nova conversa sobre "${currentLesson.Tema}". 
-
-🎓 Como posso ajudá-lo desta vez? ✨`,
+        text: `Olá novamente! Vamos começar uma nova conversa sobre "${currentLesson.Tema}". Como posso ajudá-lo?`,
         sender: 'professor',
         timestamp: new Date(),
       };
@@ -171,43 +128,30 @@ Como posso ajudá-lo hoje? 🤔`,
     });
   };
 
-  // Só renderiza se estiver visível (durante uma aula)
-  if (!isVisible) {
-    return null;
-  }
-
   return (
     <>
       <Button
         onClick={() => setIsOpen(true)}
         variant="outline"
         size="sm"
-        className="fixed bottom-6 right-6 z-50 rounded-full w-16 h-16 p-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-125 bg-gradient-to-r from-primary/20 to-purple-500/20 backdrop-blur-sm border-primary/40 hover:bg-gradient-to-r hover:from-primary/30 hover:to-purple-500/30 animate-bounce hover:animate-none group"
+        className="fixed bottom-6 right-6 z-50 rounded-full w-14 h-14 p-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 bg-primary/10 backdrop-blur border-primary/30 hover:bg-primary/20"
       >
-        <div className="relative">
-          <GraduationCap className="h-7 w-7 text-primary transition-transform duration-300 group-hover:rotate-12" />
-          <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-purple-500 animate-pulse" />
-        </div>
+        <GraduationCap className="h-6 w-6 text-primary" />
       </Button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-          <Card className="w-full max-w-2xl h-[90vh] sm:h-[80vh] bg-background/98 backdrop-blur-xl border-border shadow-2xl animate-scale-in flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <Card className="w-full max-w-2xl h-[90vh] sm:h-[80vh] bg-background/95 backdrop-blur border-border shadow-2xl animate-scale-in flex flex-col">
             {/* Header */}
-            <div className="p-4 sm:p-6 border-b border-border bg-gradient-to-r from-primary/5 to-purple-500/5">
+            <div className="p-4 sm:p-6 border-b border-border">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 animate-slide-in-right">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary/30 to-purple-500/30 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                    <GraduationCap className="h-6 w-6 text-primary" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <GraduationCap className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                      👩‍⚖️ Dra. Maria Helena 
-                      <span className="text-xs bg-green-500/20 text-green-600 px-2 py-1 rounded-full animate-pulse">
-                        • Online
-                      </span>
-                    </h3>
-                    <p className="text-sm text-muted-foreground">🎓 Professora de Direito • 📚 Especialista Jurídica</p>
+                    <h3 className="text-lg font-semibold text-foreground">Dra. Maria Helena</h3>
+                    <p className="text-sm text-muted-foreground">Professora de Direito</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -215,15 +159,15 @@ Como posso ajudá-lo hoje? 🤔`,
                     variant="ghost"
                     size="sm"
                     onClick={clearChat}
-                    className="text-xs hover:bg-primary/10 transition-all duration-200 hover:scale-105"
+                    className="text-xs"
                   >
-                    🔄 Nova conversa
+                    Nova conversa
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsOpen(false)}
-                    className="h-8 w-8 p-0 hover:bg-muted rounded-full transition-all duration-200 hover:scale-110 hover:rotate-90"
+                    className="h-8 w-8 p-0 hover:bg-muted rounded-full"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -237,13 +181,13 @@ Como posso ajudá-lo hoje? 🤔`,
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl p-4 shadow-sm transition-all duration-300 hover:shadow-md ${
+                      className={`max-w-[80%] rounded-lg p-3 ${
                         message.sender === 'user'
-                          ? 'bg-gradient-to-r from-primary to-primary/90 text-primary-foreground animate-slide-in-right'
-                          : 'bg-gradient-to-r from-muted to-muted/80 text-foreground animate-slide-in-left border border-border/50'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
                       }`}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -257,34 +201,11 @@ Como posso ajudá-lo hoje? 🤔`,
                     </div>
                   </div>
                 ))}
-                
-                {/* Animação de digitação */}
-                {isTyping && (
-                  <div className="flex justify-start animate-fade-in">
-                    <div className="max-w-[85%] rounded-2xl p-4 bg-gradient-to-r from-muted to-muted/80 border border-border/50 shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">👩‍⚖️ Professora está digitando...</span>
-                      </div>
-                      {typingText && (
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap mt-2 animate-fade-in">
-                          {typingText}
-                          <span className="animate-pulse">|</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {isLoading && !isTyping && (
-                  <div className="flex justify-start animate-fade-in">
-                    <div className="bg-gradient-to-r from-muted to-muted/80 rounded-2xl p-4 flex items-center gap-3 border border-border/50">
-                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">🤔 Analisando sua pergunta...</p>
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <p className="text-sm text-muted-foreground">Professora está digitando...</p>
                     </div>
                   </div>
                 )}
@@ -292,28 +213,28 @@ Como posso ajudá-lo hoje? 🤔`,
             </ScrollArea>
 
             {/* Input Area */}
-            <div className="p-4 sm:p-6 border-t border-border bg-gradient-to-r from-background to-muted/20">
-              <div className="flex gap-3">
+            <div className="p-4 sm:p-6 border-t border-border">
+              <div className="flex gap-2">
                 <Input
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="💬 Digite sua dúvida jurídica..."
-                  disabled={isLoading || isTyping}
-                  className="flex-1 rounded-xl border-border/50 focus:border-primary transition-all duration-200 hover:border-primary/50"
+                  placeholder="Digite sua dúvida jurídica..."
+                  disabled={isLoading}
+                  className="flex-1"
                 />
                 <Button
                   onClick={sendMessage}
-                  disabled={!inputValue.trim() || isLoading || isTyping}
+                  disabled={!inputValue.trim() || isLoading}
                   size="sm"
-                  className="px-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                  className="px-3"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center flex items-center justify-center gap-1">
-                ⚡ Pressione Enter para enviar • 🎯 Perguntas específicas geram melhores respostas
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Pressione Enter para enviar sua pergunta
               </p>
             </div>
           </Card>
