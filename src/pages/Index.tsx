@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CourseModules } from "@/components/CourseModules";
@@ -122,44 +123,55 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background transition-all duration-300">
       <Header 
         currentView={currentView} 
         onDashboardClick={() => setCurrentView('dashboard')} 
       />
       
-      <main className={`${currentView === 'lesson' ? 'pt-0' : 'pt-16'} transition-all duration-300`}>
+      <main className={`${currentView === 'lesson' ? 'pt-0' : 'pt-16'} transition-all duration-500`}>
         <div className="animate-fade-in">
           {currentView === 'modules' && (
-            <CourseModules lessons={allLessons} onDayClick={handleDayClick} />
+            <div className="animate-slide-in-right">
+              <CourseModules lessons={allLessons} onDayClick={handleDayClick} />
+            </div>
           )}
           
           {currentView === 'lessons' && (
-            <LessonList 
-              day={selectedDay} 
-              onBack={handleBack} 
-              onLessonClick={handleLessonClick} 
-            />
+            <div className="animate-slide-in-left">
+              <LessonList 
+                day={selectedDay} 
+                onBack={handleBack} 
+                onLessonClick={handleLessonClick} 
+              />
+            </div>
           )}
           
           {currentView === 'lesson' && selectedLesson && (
-            <LessonDetail 
-              lesson={selectedLesson} 
-              onBack={handleBack} 
-              onNextLesson={handleNextLesson} 
-              onPreviousLesson={handlePreviousLesson} 
-              hasNext={getHasNext()} 
-              hasPrevious={getHasPrevious()} 
-            />
+            <div className="animate-scale-in">
+              <LessonDetail 
+                lesson={selectedLesson} 
+                onBack={handleBack} 
+                onNextLesson={handleNextLesson} 
+                onPreviousLesson={handlePreviousLesson} 
+                hasNext={getHasNext()} 
+                hasPrevious={getHasPrevious()} 
+              />
+            </div>
           )}
           
           {currentView === 'dashboard' && (
-            <ProgressDashboard onBack={handleBack} />
+            <div className="animate-fade-in">
+              <ProgressDashboard onBack={handleBack} />
+            </div>
           )}
         </div>
       </main>
 
-      <LegalProfessorChat currentLesson={selectedLesson} />
+      <LegalProfessorChat 
+        currentLesson={selectedLesson} 
+        isVisible={currentView === 'lesson'} 
+      />
     </div>
   );
 };
