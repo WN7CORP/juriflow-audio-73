@@ -27,7 +27,8 @@ const Index = () => {
           ...item,
           Nome: item.Tema || `Aula ${item.Aula}`,
           Link: item.video || '',
-          Descricao: item.conteudo || 'Conteúdo não disponível'
+          Descricao: item.conteudo || 'Conteúdo não disponível',
+          Area: item.Area || 'Área não informada'
         }));
         setAllLessons(mappedLessons);
       }

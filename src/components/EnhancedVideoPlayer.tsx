@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { YouTubePlayer } from './YouTubePlayer';
 import { isYouTubeUrl, extractYouTubeId } from '@/lib/utils';
@@ -133,6 +132,17 @@ const DropboxVideoPlayer = ({
       console.log('Video can play');
       setIsLoading(false);
       setCanPlay(true);
+      
+      // Immediately try to play when video can play
+      if (autoPlay) {
+        video.play().then(() => {
+          console.log('Auto-play started on canPlay');
+          setIsLoading(false);
+        }).catch((error) => {
+          console.log('Auto-play failed on canPlay:', error);
+          setIsLoading(false);
+        });
+      }
     };
 
     const handleLoadedMetadata = () => {
@@ -151,12 +161,12 @@ const DropboxVideoPlayer = ({
     const handleCanPlayThrough = () => {
       console.log('Video can play through, autoPlay:', autoPlay);
       // Auto-play if enabled and can play
-      if (autoPlay && canPlay) {
+      if (autoPlay) {
         video.play().then(() => {
-          console.log('Auto-play started');
+          console.log('Auto-play started on canPlayThrough');
           setIsLoading(false);
         }).catch((error) => {
-          console.log('Auto-play failed:', error);
+          console.log('Auto-play failed on canPlayThrough:', error);
           setIsLoading(false);
         });
       }
@@ -476,6 +486,6 @@ export const EnhancedVideoPlayer = (props: EnhancedVideoPlayerProps) => {
     }
   }
 
-  // Default to enhanced Dropbox/direct video player
-  return <DropboxVideoPlayer {...props} />;
+  // Default to enhanced Dropbox/direct video player - ensure autoPlay is always true
+  return <DropboxVideoPlayer {...props} autoPlay={true} />;
 };
