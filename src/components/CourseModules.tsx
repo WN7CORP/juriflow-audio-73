@@ -58,7 +58,7 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
   if (modules.length === 0) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Carregando módulos...</p>
         </div>
@@ -68,43 +68,43 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section - Minimal padding */}
-      <div className="relative bg-gradient-to-br from-primary/10 via-background to-accent/5 border-b border-border">
+      {/* Hero Section - Enhanced with animations */}
+      <div className="relative bg-gradient-to-br from-primary/10 via-background to-accent/5 border-b border-border animate-fade-in">
         <div className="container mx-auto px-4 sm:px-6 pt-2 pb-4">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-2">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-2 animate-scale-in">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
               Sua Jornada de Aprendizado
             </div>
             
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 leading-tight animate-fade-in" style={{ animationDelay: '200ms' }}>
               Seus Módulos de Estudo
             </h1>
             
-            <p className="text-base text-muted-foreground mb-3 leading-relaxed">
+            <p className="text-base text-muted-foreground mb-3 leading-relaxed animate-fade-in" style={{ animationDelay: '400ms' }}>
               Selecione um módulo para começar ou continuar seus estudos
             </p>
 
-            {/* Stats Section - Compact */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto">
-              <div className="text-center">
-                <div className="text-xl font-bold text-primary mb-1">
+            {/* Stats Section - Enhanced animations */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto animate-fade-in" style={{ animationDelay: '600ms' }}>
+              <div className="text-center transition-all duration-300 hover:scale-105 animate-scale-in" style={{ animationDelay: '700ms' }}>
+                <div className="text-xl font-bold text-primary mb-1 transition-all duration-300 hover:text-primary/80">
                   {modules.length}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Módulos
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-primary mb-1">
+              <div className="text-center transition-all duration-300 hover:scale-105 animate-scale-in" style={{ animationDelay: '800ms' }}>
+                <div className="text-xl font-bold text-primary mb-1 transition-all duration-300 hover:text-primary/80">
                   {lessons.length}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Aulas Totais
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-primary mb-1">
+              <div className="text-center transition-all duration-300 hover:scale-105 animate-scale-in" style={{ animationDelay: '900ms' }}>
+                <div className="text-xl font-bold text-primary mb-1 transition-all duration-300 hover:text-primary/80">
                   {completedLessons.size}
                 </div>
                 <div className="text-xs text-muted-foreground">
@@ -116,28 +116,33 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
         </div>
       </div>
 
-      {/* Modules Grid - Reduced top padding */}
+      {/* Modules Grid - Enhanced with staggered animations */}
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {modules.map((module) => (
-            <ModuleCard
-              key={module.day}
-              module={module}
-              onClick={() => onDayClick(module.day)}
-            />
+          {modules.map((module, index) => (
+            <div 
+              key={module.day} 
+              className="animate-fade-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <ModuleCard
+                module={module}
+                onClick={() => onDayClick(module.day)}
+              />
+            </div>
           ))}
         </div>
 
-        {/* Progress Summary - Enhanced but more compact */}
-        <div className="mt-8 max-w-4xl mx-auto">
-          <div className="bg-card border border-border rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
+        {/* Progress Summary - Enhanced animations */}
+        <div className="mt-8 max-w-4xl mx-auto animate-fade-in" style={{ animationDelay: '1000ms' }}>
+          <div className="bg-card border border-border rounded-xl p-6 transition-all duration-500 hover:shadow-lg hover:border-primary/30">
+            <h3 className="text-lg font-semibold text-foreground mb-4 text-center transition-colors duration-300 hover:text-primary">
               Progresso Geral
             </h3>
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-accent/20 rounded-lg">
-                <div className="text-xl font-bold text-primary mb-1">
+              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1100ms' }}>
+                <div className="text-xl font-bold text-primary mb-1 transition-all duration-300 hover:scale-110">
                   {Math.round((completedLessons.size / lessons.length) * 100)}%
                 </div>
                 <div className="text-xs text-muted-foreground">
@@ -145,8 +150,8 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
                 </div>
               </div>
               
-              <div className="text-center p-3 bg-accent/20 rounded-lg">
-                <div className="text-xl font-bold text-green-500 mb-1">
+              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1200ms' }}>
+                <div className="text-xl font-bold text-green-500 mb-1 transition-all duration-300 hover:scale-110">
                   {modules.filter(m => m.completedLessons === m.totalLessons).length}
                 </div>
                 <div className="text-xs text-muted-foreground">
@@ -154,8 +159,8 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
                 </div>
               </div>
               
-              <div className="text-center p-3 bg-accent/20 rounded-lg">
-                <div className="text-xl font-bold text-amber-500 mb-1">
+              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1300ms' }}>
+                <div className="text-xl font-bold text-amber-500 mb-1 transition-all duration-300 hover:scale-110">
                   {modules.filter(m => m.completedLessons > 0 && m.completedLessons < m.totalLessons).length}
                 </div>
                 <div className="text-xs text-muted-foreground">
@@ -163,8 +168,8 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
                 </div>
               </div>
               
-              <div className="text-center p-3 bg-accent/20 rounded-lg">
-                <div className="text-xl font-bold text-blue-500 mb-1">
+              <div className="text-center p-3 bg-accent/20 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-accent/30 animate-scale-in" style={{ animationDelay: '1400ms' }}>
+                <div className="text-xl font-bold text-blue-500 mb-1 transition-all duration-300 hover:scale-110">
                   {modules.filter(m => m.completedLessons === 0).length}
                 </div>
                 <div className="text-xs text-muted-foreground">
