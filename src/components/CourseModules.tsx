@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { ModuleCard } from "./ModuleCard";
 import { SearchAndFilter } from "./SearchAndFilter";
-import { Module, Lesson } from "@/types/course";
+import { DayModule, Lesson } from "@/types/course";
 import { useProgress } from "@/hooks/useProgress";
 
 interface CourseModulesProps {
@@ -11,7 +10,7 @@ interface CourseModulesProps {
 }
 
 export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
-  const [modules, setModules] = useState<Module[]>([]);
+  const [modules, setModules] = useState<DayModule[]>([]);
   const [filteredLessons, setFilteredLessons] = useState<Lesson[]>(lessons);
   const { completedLessons } = useProgress();
 
@@ -31,8 +30,8 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
       moduleMap.get(day)!.push(lesson);
     });
 
-    // Convert to Module array
-    const moduleList: Module[] = Array.from(moduleMap.entries())
+    // Convert to DayModule array
+    const moduleList: DayModule[] = Array.from(moduleMap.entries())
       .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
       .map(([day, dayLessons]) => {
         const completedCount = dayLessons.filter(lesson => 
@@ -54,7 +53,9 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
           // Use the modulo column as cover image, fallback to first lesson's capa
           coverImage: sortedLessons[0]?.modulo || sortedLessons[0]?.capa || '/placeholder.svg',
           duration: dayLessons.length * 15, // 15 min per lesson estimate
-          isNew: completedCount === 0
+          isNew: completedCount === 0,
+          area: sortedLessons[0]?.Area || 'Área não informada',
+          modulo: sortedLessons[0]?.Modulo || sortedLessons[0]?.modulo || ''
         };
       });
 

@@ -23,6 +23,18 @@ export interface Question {
   Aula: string;
 }
 
+export interface DayModule {
+  day: string;
+  lessons: Lesson[];
+  totalLessons: number;
+  completedLessons: number;
+  coverImage?: string;
+  duration?: number;
+  isNew?: boolean;
+  area?: string;
+  modulo?: string;
+}
+
 export interface Module {
   area: string;
   modulo: string;

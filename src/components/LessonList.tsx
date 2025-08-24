@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,10 +31,7 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
         if (data) {
           // Map Supabase data to Lesson interface
           const mappedLessons: Lesson[] = data.map(item => ({
-            ...item,
-            Nome: item.Tema || `Aula ${item.Aula}`,
-            Link: item.video || '',
-            Descricao: item.conteudo || 'Conteúdo não disponível'
+            ...item
           }));
           setLessons(mappedLessons);
         }
@@ -122,7 +118,7 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
                     <div className="relative w-full sm:w-48 aspect-video sm:aspect-square overflow-hidden flex-shrink-0">
                       <img
                         src={lesson.capa || '/placeholder.svg'}
-                        alt={lesson.Nome}
+                        alt={lesson.Tema}
                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -193,12 +189,12 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
                       </div>
 
                       <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-all duration-300">
-                        {lesson.Nome}
+                        {lesson.Tema}
                       </h3>
 
-                      {lesson.Descricao && (
+                      {lesson.conteudo && (
                         <p className="text-sm text-muted-foreground mb-3 line-clamp-2 sm:line-clamp-3 transition-colors duration-300 group-hover:text-foreground">
-                          {lesson.Descricao}
+                          {lesson.conteudo}
                         </p>
                       )}
 

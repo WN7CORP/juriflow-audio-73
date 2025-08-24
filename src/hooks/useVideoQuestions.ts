@@ -49,7 +49,7 @@ export const useVideoQuestions = (lessonAula: string) => {
     }
   }, [storageKey]);
 
-  // Fetch questions using RPC function
+  // Fetch questions directly from the table
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!lessonAula) return;
@@ -59,29 +59,30 @@ export const useVideoQuestions = (lessonAula: string) => {
       try {
         console.log('Fetching questions for lesson:', lessonAula);
         
-        // Use the existing RPC function
-        const { data, error } = await supabase.rpc('get_lesson_questions', {
-          lesson_aula: lessonAula
-        });
+        // Query directly from QUESTÕES-CURSO table
+        const { data, error } = await supabase
+          .from('QUESTÕES-CURSO')
+          .select('*')
+          .eq('Aula', lessonAula);
 
-        console.log('Questions RPC response:', { data, error });
+        console.log('Questions response:', { data, error });
 
         if (error) {
-          console.error('Error fetching questions via RPC:', error);
+          console.error('Error fetching questions:', error);
           return;
         }
 
         if (data && data.length > 0) {
-          // Map RPC response to Question interface
+          // Map response to Question interface
           const mappedQuestions: Question[] = data.map((item: any) => ({
             id: item.id,
             pergunta: item.pergunta,
             resposta: item.resposta,
-            'Alternativa a': item.alternativa_a,
-            'Alternativa b': item.alternativa_b,
-            'Alternativa c': item.alternativa_c,
-            'Alternativa d': item.alternativa_d,
-            Aula: item.aula
+            'Alternativa a': item['Alternativa a'],
+            'Alternativa b': item['Alternativa b'],
+            'Alternativa c': item['Alternativa c'],
+            'Alternativa d': item['Alternativa d'],
+            Aula: item.Aula
           }));
 
           setQuestions(mappedQuestions);
