@@ -3,6 +3,7 @@ import { Clock, CheckCircle, Play, HelpCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlaybackSpeedControl } from "@/components/PlaybackSpeedControl";
+import { QuestionsList } from "@/components/QuestionsList";
 import { Lesson } from "@/types/course";
 
 interface LessonInfoProps {
@@ -13,6 +14,10 @@ interface LessonInfoProps {
   playbackSpeed: number;
   onPlaybackSpeedChange: (speed: number) => void;
   hasQuestions?: boolean;
+  questions?: any[];
+  answeredQuestions?: Set<number>;
+  canAnswerQuestions?: boolean;
+  onQuestionSelect?: (questionId: number) => boolean;
 }
 
 export const LessonInfo = ({ 
@@ -22,7 +27,11 @@ export const LessonInfo = ({
   isCompleted, 
   playbackSpeed, 
   onPlaybackSpeedChange,
-  hasQuestions = false
+  hasQuestions = false,
+  questions = [],
+  answeredQuestions = new Set(),
+  canAnswerQuestions = false,
+  onQuestionSelect
 }: LessonInfoProps) => {
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -31,7 +40,7 @@ export const LessonInfo = ({
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-4">
+    <div className="p-4 lg:p-6 space-y-6">
       {/* Progress Bar - Always visible and prominent */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
@@ -121,6 +130,16 @@ export const LessonInfo = ({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Questions List */}
+      {hasQuestions && questions.length > 0 && onQuestionSelect && (
+        <QuestionsList
+          questions={questions}
+          answeredQuestions={answeredQuestions}
+          canAnswerQuestions={canAnswerQuestions}
+          onQuestionSelect={onQuestionSelect}
+        />
       )}
     </div>
   );

@@ -12,6 +12,7 @@ export const useVideoQuestions = (lessonAula: string) => {
   const [showQuestion, setShowQuestion] = useState(false);
   const [questionTriggered, setQuestionTriggered] = useState(false);
   const [attempts, setAttempts] = useState<QuestionAttempt[]>([]);
+  const [canAnswerQuestions, setCanAnswerQuestions] = useState(false);
   const [progress, setProgress] = useState<QuestionProgress>({
     totalQuestions: 0,
     correctAnswers: 0,
@@ -81,12 +82,15 @@ export const useVideoQuestions = (lessonAula: string) => {
   }, [lessonAula]);
 
   const checkVideoProgress = useCallback((currentTime: number, duration: number) => {
-    if (!questions.length || questionTriggered || showQuestion) return;
-
     const progressPercent = (currentTime / duration) * 100;
     
-    // Trigger question at 80% of video
+    // Enable questions when video reaches 80%
     if (progressPercent >= 80) {
+      setCanAnswerQuestions(true);
+      
+      // Auto-trigger question at 80% if not already triggered
+      if (!questions.length || questionTriggered || showQuestion) return;
+
       const unansweredQuestions = questions.filter(q => 
         !progress.questionsAnswered.has(q.id)
       );
@@ -102,6 +106,33 @@ export const useVideoQuestions = (lessonAula: string) => {
       }
     }
   }, [questions, questionTriggered, showQuestion, progress.questionsAnswered]);
+
+  const showQuestionManually = useCallback((questionId?: number) => {
+    if (!canAnswerQuestions) {
+      return false; // Can't show questions before 80%
+    }
+
+    let questionToShow: Question | null = null;
+
+    if (questionId) {
+      questionToShow = questions.find(q => q.id === questionId) || null;
+    } else {
+      const unansweredQuestions = questions.filter(q => 
+        !progress.questionsAnswered.has(q.id)
+      );
+      if (unansweredQuestions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * unansweredQuestions.length);
+        questionToShow = unansweredQuestions[randomIndex];
+      }
+    }
+
+    if (questionToShow) {
+      setCurrentQuestion(questionToShow);
+      setShowQuestion(true);
+      return true;
+    }
+    return false;
+  }, [questions, progress.questionsAnswered, canAnswerQuestions]);
 
   const submitAnswer = useCallback((selectedAnswer: string) => {
     if (!currentQuestion) return;
@@ -146,6 +177,7 @@ export const useVideoQuestions = (lessonAula: string) => {
 
   const resetQuestionTrigger = useCallback(() => {
     setQuestionTriggered(false);
+    setCanAnswerQuestions(false);
   }, []);
 
   return {
@@ -155,9 +187,11 @@ export const useVideoQuestions = (lessonAula: string) => {
     questionTriggered,
     attempts,
     progress,
+    canAnswerQuestions,
     checkVideoProgress,
     submitAnswer,
     resetQuestionTrigger,
+    showQuestionManually,
     hasQuestions: questions.length > 0
   };
 };
