@@ -1,3 +1,4 @@
+
 export interface Lesson {
   id?: number;
   Dia: string;
@@ -12,6 +13,7 @@ export interface Lesson {
   Link: string;
   Descricao: string;
   Area?: string;
+  capaModulos?: string;
 }
 
 export interface Module {

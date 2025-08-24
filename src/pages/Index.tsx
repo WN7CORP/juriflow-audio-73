@@ -21,7 +21,8 @@ const Index = () => {
       const { data, error } = await supabase
         .from("VIDEO-AULAS-DIAS")
         .select("*")
-        .order("id", { ascending: true });
+        .order("Modulo", { ascending: true })
+        .order("Aula", { ascending: true });
 
       if (error) {
         console.error("Error fetching lessons:", error);
@@ -39,12 +40,13 @@ const Index = () => {
           conteudo: item.conteudo || '',
           video: item.video || '',
           capa: item.capa || '',
-          modulo: item.modulo || item.Modulo || 'Módulo não informado',
-          Modulo: item.Modulo || item.modulo || 'Módulo não informado',
+          modulo: item.Modulo || 'Módulo não informado',
+          Modulo: item.Modulo || 'Módulo não informado',
           Nome: item.Tema || `Aula ${item.Aula}`,
           Link: item.video || '',
           Descricao: item.conteudo || 'Conteúdo não disponível',
-          Area: item.Area || 'Área não informada'
+          Area: item.Area || 'Área não informada',
+          capaModulos: item["capa-modulos"] || ''
         }));
         
         console.log("Mapped lessons:", mappedLessons);
@@ -78,11 +80,11 @@ const Index = () => {
   const handleNextLesson = () => {
     if (!selectedLesson) return;
     
-    // Get all lessons sorted by Day and Aula
+    // Get all lessons sorted by Modulo and Aula
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia);
-      const dayB = parseInt(b.Dia);
-      if (dayA !== dayB) return dayA - dayB;
+      const moduloA = parseInt(a.Modulo || '0');
+      const moduloB = parseInt(b.Modulo || '0');
+      if (moduloA !== moduloB) return moduloA - moduloB;
       return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
@@ -97,11 +99,11 @@ const Index = () => {
   const handlePreviousLesson = () => {
     if (!selectedLesson) return;
     
-    // Get all lessons sorted by Day and Aula
+    // Get all lessons sorted by Modulo and Aula
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia);
-      const dayB = parseInt(b.Dia);
-      if (dayA !== dayB) return dayA - dayB;
+      const moduloA = parseInt(a.Modulo || '0');
+      const moduloB = parseInt(b.Modulo || '0');
+      if (moduloA !== moduloB) return moduloA - moduloB;
       return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
@@ -117,9 +119,9 @@ const Index = () => {
     if (!selectedLesson) return false;
     
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia);
-      const dayB = parseInt(b.Dia);
-      if (dayA !== dayB) return dayA - dayB;
+      const moduloA = parseInt(a.Modulo || '0');
+      const moduloB = parseInt(b.Modulo || '0');
+      if (moduloA !== moduloB) return moduloA - moduloB;
       return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
@@ -131,9 +133,9 @@ const Index = () => {
     if (!selectedLesson) return false;
     
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia);
-      const dayB = parseInt(b.Dia);
-      if (dayA !== dayB) return dayA - dayB;
+      const moduloA = parseInt(a.Modulo || '0');
+      const moduloB = parseInt(b.Modulo || '0');
+      if (moduloA !== moduloB) return moduloA - moduloB;
       return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
