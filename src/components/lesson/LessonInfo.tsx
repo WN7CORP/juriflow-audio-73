@@ -1,9 +1,11 @@
 
-import { Clock, CheckCircle, Play, HelpCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Clock, CheckCircle2, ChevronDown, BookOpen } from "lucide-react";
 import { PlaybackSpeedControl } from "@/components/PlaybackSpeedControl";
 import { Lesson } from "@/types/course";
+import { useState } from "react";
 
 interface LessonInfoProps {
   lesson: Lesson;
@@ -12,7 +14,6 @@ interface LessonInfoProps {
   isCompleted: boolean;
   playbackSpeed: number;
   onPlaybackSpeedChange: (speed: number) => void;
-  hasQuestions?: boolean;
 }
 
 export const LessonInfo = ({ 
@@ -21,96 +22,117 @@ export const LessonInfo = ({
   progressPercent, 
   isCompleted, 
   playbackSpeed, 
-  onPlaybackSpeedChange,
-  hasQuestions = false
+  onPlaybackSpeedChange 
 }: LessonInfoProps) => {
+  const [showDescription, setShowDescription] = useState(false);
+
   const formatDuration = (seconds: number) => {
+    if (seconds === 0) return "~15 min";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
+    if (minutes === 0) return `${remainingSeconds}s`;
+    if (remainingSeconds === 0) return `${minutes} min`;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Always show progress bar, even at 0%
+  const displayProgress = Math.max(progressPercent, 0);
+
   return (
-    <div className="p-4 lg:p-6 space-y-4">
-      {/* Progress Bar - Always visible and prominent */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Progresso da aula</span>
-          <span className="font-medium text-primary">{Math.round(progressPercent || 0)}%</span>
-        </div>
-        <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
-          <div 
-            className="bg-primary h-full transition-all duration-500 ease-out rounded-full relative"
-            style={{ width: `${Math.max(progressPercent || 1, 1)}%` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20 rounded-full"></div>
+    <div className="p-4 lg:p-6 animate-fade-in">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg lg:text-2xl font-bold text-foreground mb-3 line-clamp-2 leading-tight animate-scale-in">
+            {lesson.Tema}
+          </h1>
+          
+          {/* Area Badge */}
+          {lesson.Area && lesson.Area !== 'Área não informada' && (
+            <div className="mb-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs lg:text-sm px-3 py-1.5 animate-scale-in">
+                <BookOpen className="h-3 w-3 lg:h-4 lg:w-4 mr-1.5" />
+                {lesson.Area}
+              </Badge>
+            </div>
+          )}
+          
+          <div className="flex flex-wrap items-center gap-2 lg:gap-3 text-sm lg:text-base text-muted-foreground mb-4">
+            <div className="flex items-center gap-1.5 lg:gap-2 bg-muted/50 px-2.5 lg:px-3 py-1.5 rounded-full animate-scale-in" style={{ animationDelay: '200ms' }}>
+              <Clock className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
+              <span className="font-medium text-xs lg:text-sm">{formatDuration(duration)}</span>
+            </div>
+            {displayProgress > 0 && (
+              <div className="flex items-center gap-1.5 lg:gap-2 bg-primary/10 px-2.5 lg:px-3 py-1.5 rounded-full animate-scale-in" style={{ animationDelay: '300ms' }}>
+                <span className="font-medium text-primary text-xs lg:text-sm">{Math.round(displayProgress)}% assistido</span>
+              </div>
+            )}
+            {isCompleted && (
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs lg:text-sm px-2.5 lg:px-3 py-1 lg:py-1.5 animate-scale-in" style={{ animationDelay: '400ms' }}>
+                <CheckCircle2 className="h-3.5 w-3.5 lg:h-4 lg:w-4 mr-1.5 lg:mr-2" />
+                Concluída
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 lg:gap-4">
-        {/* Duration */}
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>{duration > 0 ? formatDuration(duration) : 'Carregando...'}</span>
-        </div>
-
-        {/* Completion Status */}
-        {isCompleted && (
-          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Concluída
-          </Badge>
-        )}
-
-        {/* In Progress */}
-        {progressPercent > 0 && progressPercent < 90 && (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-            <Play className="h-3 w-3 mr-1" />
-            Em andamento
-          </Badge>
-        )}
-
-        {/* Questions Available */}
-        {hasQuestions && (
-          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-            <HelpCircle className="h-3 w-3 mr-1" />
-            Com questões
-          </Badge>
-        )}
-
-        {/* Area Badge */}
-        {lesson.Area && (
-          <Badge variant="outline">
-            {lesson.Area}
-          </Badge>
-        )}
+      {/* Playback Speed Control */}
+      <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '500ms' }}>
+        <PlaybackSpeedControl
+          currentSpeed={playbackSpeed}
+          onSpeedChange={onPlaybackSpeedChange}
+          className="justify-start"
+        />
       </div>
 
-      {/* Lesson Title and Description */}
-      <div className="space-y-2">
-        <h1 className="text-xl lg:text-2xl font-bold text-foreground line-clamp-2">
-          {lesson.Tema || `Aula ${lesson.Aula}`}
-        </h1>
-        
-        {lesson.conteudo && (
-          <p className="text-muted-foreground text-sm lg:text-base leading-relaxed line-clamp-3 lg:line-clamp-4">
-            {lesson.conteudo}
+      {/* Progress Bar - Always show, improved mobile visibility */}
+      <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '600ms' }}>
+        <div className="flex justify-between items-center mb-2 lg:mb-3">
+          <span className="text-sm lg:text-base text-muted-foreground font-medium">Progresso da aula</span>
+          <span className="text-base lg:text-lg font-bold text-primary animate-scale-in">
+            {Math.round(displayProgress)}%
+          </span>
+        </div>
+        <Progress 
+          value={displayProgress} 
+          className="h-4 lg:h-4 animate-scale-in bg-secondary transition-all duration-500" 
+          style={{ animationDelay: '700ms' }} 
+        />
+        {displayProgress === 0 && (
+          <p className="text-xs text-muted-foreground mt-1 animate-fade-in">
+            Comece a assistir para ver o progresso
           </p>
         )}
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Aula {lesson.Aula} • Dia {lesson.Dia}
+      {/* Description - Expandable on mobile */}
+      {lesson.conteudo && (
+        <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '800ms' }}>
+          <Button
+            variant="ghost"
+            className="p-0 h-auto font-semibold text-left lg:cursor-default text-base lg:text-lg hover:bg-transparent mb-2 lg:mb-3 transition-all duration-300 hover:text-primary"
+            onClick={() => setShowDescription(!showDescription)}
+          >
+            <span>Sobre esta aula</span>
+            <ChevronDown className={`ml-2 h-4 w-4 lg:hidden transition-transform duration-300 ${showDescription ? 'rotate-180' : ''}`} />
+          </Button>
+          <div className={`text-muted-foreground text-sm lg:text-base leading-relaxed transition-all duration-500 bg-muted/30 p-3 lg:p-4 rounded-lg ${
+            showDescription ? 'block max-h-none opacity-100' : 'line-clamp-3 lg:block lg:max-h-none opacity-90'
+          }`}>
+            {lesson.conteudo}
+          </div>
+          {!showDescription && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden mt-2 p-0 h-auto text-sm text-primary hover:bg-transparent font-medium transition-all duration-300 hover:scale-105"
+              onClick={() => setShowDescription(true)}
+            >
+              Ver mais
+            </Button>
+          )}
         </div>
-        
-        <PlaybackSpeedControl
-          currentSpeed={playbackSpeed}
-          onSpeedChange={onPlaybackSpeedChange}
-        />
-      </div>
+      )}
     </div>
   );
 };

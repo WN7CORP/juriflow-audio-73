@@ -7,37 +7,15 @@ export interface Lesson {
   conteudo?: string;
   video?: string;
   capa?: string;
-  Area?: string;
-  Modulo?: string;
-  modulo?: string; // Mantendo compatibilidade
-}
-
-export interface Question {
-  id: number;
-  pergunta: string;
-  resposta: string;
-  'Alternativa a': string;
-  'Alternativa b': string;
-  'Alternativa c': string;
-  'Alternativa d': string;
-  Aula: string;
-}
-
-export interface DayModule {
-  day: string;
-  lessons: Lesson[];
-  totalLessons: number;
-  completedLessons: number;
-  coverImage?: string;
-  duration?: number;
-  isNew?: boolean;
-  area?: string;
   modulo?: string;
+  Nome: string;
+  Link: string;
+  Descricao: string;
+  Area?: string;
 }
 
 export interface Module {
-  area: string;
-  modulo: string;
+  day: string;
   lessons: Lesson[];
   totalLessons: number;
   completedLessons: number;
@@ -76,18 +54,4 @@ export interface UserStats {
   completionRate: number;
   weeklyGoal: number;
   weeklyProgress: number;
-}
-
-export interface QuestionAttempt {
-  questionId: number;
-  selectedAnswer: string;
-  isCorrect: boolean;
-  timestamp: Date;
-}
-
-export interface QuestionProgress {
-  totalQuestions: number;
-  correctAnswers: number;
-  wrongAnswers: number;
-  questionsAnswered: Set<number>;
 }

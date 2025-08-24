@@ -16,22 +16,13 @@ const Index = () => {
 
   useEffect(() => {
     const fetchLessons = async () => {
-      console.log('Fetching lessons from VIDEO-AULAS-DIAS...');
-      
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("VIDEO-AULAS-DIAS")
         .select("*")
         .order("Dia", { ascending: true })
         .order("Aula", { ascending: true });
 
-      if (error) {
-        console.error('Error fetching lessons:', error);
-        return;
-      }
-
       if (data) {
-        console.log('Raw lesson data:', data);
-        
         const mappedLessons: Lesson[] = data.map(item => ({
           id: item.id,
           Dia: item.Dia || '',
@@ -40,12 +31,12 @@ const Index = () => {
           conteudo: item.conteudo || '',
           video: item.video || '',
           capa: item.capa || '',
-          Area: item.Area || 'Área não informada',
-          Modulo: item.Modulo || item.modulo || '',
-          modulo: item.modulo || item.Modulo || ''
+          modulo: item.modulo || 'Módulo não informado',
+          Nome: item.Tema || `Aula ${item.Aula}`,
+          Link: item.video || '',
+          Descricao: item.conteudo || 'Conteúdo não disponível',
+          Area: item.Area || 'Área não informada'
         }));
-        
-        console.log('Mapped lessons:', mappedLessons);
         setAllLessons(mappedLessons);
       }
     };
@@ -58,7 +49,6 @@ const Index = () => {
   };
 
   const handleLessonClick = (lesson: Lesson) => {
-    console.log('Lesson clicked:', lesson);
     setSelectedLesson(lesson);
     setCurrentView('lesson');
   };
@@ -78,17 +68,17 @@ const Index = () => {
     
     // Get all lessons sorted by Day and Aula
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia || '0');
-      const dayB = parseInt(b.Dia || '0');
+      const dayA = parseInt(a.Dia);
+      const dayB = parseInt(b.Dia);
       if (dayA !== dayB) return dayA - dayB;
-      return parseInt(a.Aula || '0') - parseInt(b.Aula || '0');
+      return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
     const currentIndex = sortedLessons.findIndex(l => l.id === selectedLesson.id);
     if (currentIndex < sortedLessons.length - 1) {
       const nextLesson = sortedLessons[currentIndex + 1];
       setSelectedLesson(nextLesson);
-      setSelectedDay(nextLesson.Dia || ''); // Update selected day if needed
+      setSelectedDay(nextLesson.Dia); // Update selected day if needed
     }
   };
 
@@ -97,17 +87,17 @@ const Index = () => {
     
     // Get all lessons sorted by Day and Aula
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia || '0');
-      const dayB = parseInt(b.Dia || '0');
+      const dayA = parseInt(a.Dia);
+      const dayB = parseInt(b.Dia);
       if (dayA !== dayB) return dayA - dayB;
-      return parseInt(a.Aula || '0') - parseInt(b.Aula || '0');
+      return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
     const currentIndex = sortedLessons.findIndex(l => l.id === selectedLesson.id);
     if (currentIndex > 0) {
       const previousLesson = sortedLessons[currentIndex - 1];
       setSelectedLesson(previousLesson);
-      setSelectedDay(previousLesson.Dia || ''); // Update selected day if needed
+      setSelectedDay(previousLesson.Dia); // Update selected day if needed
     }
   };
 
@@ -115,10 +105,10 @@ const Index = () => {
     if (!selectedLesson) return false;
     
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia || '0');
-      const dayB = parseInt(b.Dia || '0');
+      const dayA = parseInt(a.Dia);
+      const dayB = parseInt(b.Dia);
       if (dayA !== dayB) return dayA - dayB;
-      return parseInt(a.Aula || '0') - parseInt(b.Aula || '0');
+      return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
     const currentIndex = sortedLessons.findIndex(l => l.id === selectedLesson.id);
@@ -129,10 +119,10 @@ const Index = () => {
     if (!selectedLesson) return false;
     
     const sortedLessons = [...allLessons].sort((a, b) => {
-      const dayA = parseInt(a.Dia || '0');
-      const dayB = parseInt(b.Dia || '0');
+      const dayA = parseInt(a.Dia);
+      const dayB = parseInt(b.Dia);
       if (dayA !== dayB) return dayA - dayB;
-      return parseInt(a.Aula || '0') - parseInt(b.Aula || '0');
+      return parseInt(a.Aula) - parseInt(b.Aula);
     });
     
     const currentIndex = sortedLessons.findIndex(l => l.id === selectedLesson.id);

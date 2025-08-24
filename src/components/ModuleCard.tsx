@@ -3,11 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { useProgress } from "@/hooks/useProgress";
-import { DayModule } from "@/types/course";
+import { Module } from "@/types/course";
 import { Play, Clock, CheckCircle2, BookOpen, Star } from "lucide-react";
 
 interface ModuleCardProps {
-  module: DayModule;
+  module: Module;
   onClick: () => void;
 }
 

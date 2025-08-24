@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { YouTubePlayer } from './YouTubePlayer';
 import { isYouTubeUrl, extractYouTubeId } from '@/lib/utils';
@@ -15,7 +16,6 @@ interface EnhancedVideoPlayerProps {
   autoPlay?: boolean;
   onDurationChange?: (duration: number) => void;
   playbackSpeed?: number;
-  onProgressUpdate?: (currentTime: number, duration: number) => void;
 }
 
 const DropboxVideoPlayer = ({ 
@@ -26,8 +26,7 @@ const DropboxVideoPlayer = ({
   title, 
   autoPlay = true,
   onDurationChange,
-  playbackSpeed = 1,
-  onProgressUpdate
+  playbackSpeed = 1
 }: EnhancedVideoPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -38,7 +37,6 @@ const DropboxVideoPlayer = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [canPlay, setCanPlay] = useState(false);
-  const [isPausedForQuestion, setIsPausedForQuestion] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,39 +55,6 @@ const DropboxVideoPlayer = ({
     return url;
   };
 
-  // Function to pause video for questions
-  const pauseForQuestion = useCallback(() => {
-    if (videoRef.current && !videoRef.current.paused) {
-      videoRef.current.pause();
-      setIsPausedForQuestion(true);
-      setIsPlaying(false);
-    }
-  }, []);
-
-  // Function to resume video after question
-  const resumeFromQuestion = useCallback(() => {
-    if (videoRef.current && isPausedForQuestion) {
-      videoRef.current.play();
-      setIsPausedForQuestion(false);
-      setIsPlaying(true);
-    }
-  }, [isPausedForQuestion]);
-
-  // Expose pause/resume functions globally for question modal
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).videoPauseForQuestion = pauseForQuestion;
-      (window as any).videoResumeFromQuestion = resumeFromQuestion;
-    }
-    
-    return () => {
-      if (typeof window !== 'undefined') {
-        delete (window as any).videoPauseForQuestion;
-        delete (window as any).videoResumeFromQuestion;
-      }
-    };
-  }, [pauseForQuestion, resumeFromQuestion]);
-
   // Debounced progress update function
   const debouncedProgressUpdate = useCallback((currentTimeValue: number, videoDuration: number) => {
     if (progressUpdateRef.current) {
@@ -101,12 +66,9 @@ const DropboxVideoPlayer = ({
         const progressPercent = (currentTimeValue / videoDuration) * 100;
         console.log('Updating progress:', { currentTimeValue, videoDuration, progressPercent });
         updateLessonProgress(lessonKey, progressPercent, currentTimeValue, videoDuration);
-        
-        // Notify parent about progress for question system
-        onProgressUpdate?.(currentTimeValue, videoDuration);
       }
-    }, 2000);
-  }, [lessonKey, updateLessonProgress, onProgressUpdate]);
+    }, 2000); // Update every 2 seconds instead of real-time
+  }, [lessonKey, updateLessonProgress]);
 
   // Auto-hide controls when playing
   const hideControlsAfterDelay = () => {
@@ -115,7 +77,7 @@ const DropboxVideoPlayer = ({
     }
     
     controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying && !isPausedForQuestion) {
+      if (isPlaying) {
         setShowControls(false);
       }
     }, 3000);
@@ -123,7 +85,7 @@ const DropboxVideoPlayer = ({
 
   const showControlsTemporarily = () => {
     setShowControls(true);
-    if (isPlaying && !isPausedForQuestion) {
+    if (isPlaying) {
       hideControlsAfterDelay();
     }
   };
@@ -137,7 +99,6 @@ const DropboxVideoPlayer = ({
     setIsLoading(true);
     setCanPlay(false);
     setShowControls(true);
-    setIsPausedForQuestion(false);
     
     // Clear any existing timeouts
     if (controlsTimeoutRef.current) {
@@ -172,7 +133,7 @@ const DropboxVideoPlayer = ({
 
   // Handle controls auto-hide when playing state changes
   useEffect(() => {
-    if (isPlaying && !isPausedForQuestion) {
+    if (isPlaying) {
       hideControlsAfterDelay();
     } else {
       if (controlsTimeoutRef.current) {
@@ -189,7 +150,7 @@ const DropboxVideoPlayer = ({
         clearTimeout(progressUpdateRef.current);
       }
     };
-  }, [isPlaying, isPausedForQuestion]);
+  }, [isPlaying]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -206,7 +167,7 @@ const DropboxVideoPlayer = ({
       setIsLoading(false);
       setCanPlay(true);
       
-      if (autoPlay && !isPausedForQuestion) {
+      if (autoPlay) {
         video.play().then(() => {
           console.log('Auto-play started on canPlay');
           setIsLoading(false);
@@ -241,18 +202,14 @@ const DropboxVideoPlayer = ({
 
     const handlePlay = () => {
       console.log('Video playing');
-      if (!isPausedForQuestion) {
-        setIsPlaying(true);
-      }
+      setIsPlaying(true);
       setIsLoading(false);
       onVideoStart?.();
     };
 
     const handlePause = () => {
       console.log('Video paused');
-      if (!isPausedForQuestion) {
-        setIsPlaying(false);
-      }
+      setIsPlaying(false);
       
       // Force update progress when paused
       if (progressUpdateRef.current) {
@@ -269,7 +226,6 @@ const DropboxVideoPlayer = ({
     const handleEnded = () => {
       console.log('Video ended');
       setIsPlaying(false);
-      setIsPausedForQuestion(false);
       const videoDuration = video.duration;
       updateLessonProgress(lessonKey, 100, videoDuration, videoDuration);
       onVideoEnd?.();
@@ -311,10 +267,10 @@ const DropboxVideoPlayer = ({
       video.removeEventListener('playing', handlePlaying);
       video.removeEventListener('error', handleError);
     };
-  }, [lessonKey, autoPlay, getLessonProgress, onVideoStart, onVideoEnd, onDurationChange, updateLessonProgress, debouncedProgressUpdate, isPausedForQuestion]);
+  }, [lessonKey, autoPlay, getLessonProgress, onVideoStart, onVideoEnd, onDurationChange, updateLessonProgress, debouncedProgressUpdate]);
 
   const handlePlayPause = () => {
-    if (videoRef.current && !isPausedForQuestion) {
+    if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
@@ -394,7 +350,7 @@ const DropboxVideoPlayer = ({
       onMouseEnter={showControlsTemporarily}
       onMouseMove={showControlsTemporarily}
       onMouseLeave={() => {
-        if (isPlaying && !isPausedForQuestion) {
+        if (isPlaying) {
           hideControlsAfterDelay();
         }
       }}
@@ -416,18 +372,6 @@ const DropboxVideoPlayer = ({
           <div className="text-center">
             <Loader2 className="h-8 w-8 lg:h-10 lg:w-10 text-white animate-spin mx-auto mb-2" />
             <p className="text-white text-sm lg:text-base">Carregando vídeo...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Question Pause Overlay */}
-      {isPausedForQuestion && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-40">
-          <div className="text-center text-white">
-            <div className="animate-pulse">
-              <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-lg font-medium">Responda a questão para continuar</p>
-            </div>
           </div>
         </div>
       )}
@@ -456,8 +400,7 @@ const DropboxVideoPlayer = ({
             variant="ghost"
             size="lg"
             onClick={handlePlayPause}
-            disabled={isPausedForQuestion}
-            className="bg-black/50 hover:bg-black/70 text-white rounded-full p-3 lg:p-4 transition-all duration-200 hover:scale-110 animate-scale-in disabled:opacity-50"
+            className="bg-black/50 hover:bg-black/70 text-white rounded-full p-3 lg:p-4 transition-all duration-200 hover:scale-110 animate-scale-in"
           >
             {isPlaying ? (
               <Pause className="h-5 w-5 lg:h-8 lg:w-8" />
@@ -472,8 +415,7 @@ const DropboxVideoPlayer = ({
               variant="ghost"
               size="sm"
               onClick={() => skipTime(-10)}
-              disabled={isPausedForQuestion}
-              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 hover:scale-110 disabled:opacity-50"
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
             >
               <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
             </Button>
@@ -481,8 +423,7 @@ const DropboxVideoPlayer = ({
               variant="ghost"
               size="sm"
               onClick={() => skipTime(10)}
-              disabled={isPausedForQuestion}
-              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 hover:scale-110 disabled:opacity-50"
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
             >
               <SkipForward className="h-3 w-3 lg:h-4 lg:w-4" />
             </Button>
@@ -496,8 +437,7 @@ const DropboxVideoPlayer = ({
               variant="ghost"
               size="sm"
               onClick={handlePlayPause}
-              disabled={isPausedForQuestion}
-              className="text-white hover:bg-white/20 transition-colors duration-200 p-1 lg:p-2 disabled:opacity-50"
+              className="text-white hover:bg-white/20 transition-colors duration-200 p-1 lg:p-2"
             >
               {isPlaying ? <Pause className="h-3 w-3 lg:h-4 lg:w-4" /> : <Play className="h-3 w-3 lg:h-4 lg:w-4" />}
             </Button>
@@ -509,7 +449,6 @@ const DropboxVideoPlayer = ({
                 max={duration}
                 step={1}
                 onValueChange={handleSeek}
-                disabled={isPausedForQuestion}
                 className="flex-1"
               />
               <span className="text-white text-xs lg:text-sm min-w-[35px] lg:min-w-[45px]">{formatTime(duration || 0)}</span>

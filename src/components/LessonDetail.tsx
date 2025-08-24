@@ -1,13 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { EnhancedVideoPlayer } from "./EnhancedVideoPlayer";
-import { VideoQuestionModal } from "./VideoQuestionModal";
 import { LessonHeader } from "./lesson/LessonHeader";
 import { LessonInfo } from "./lesson/LessonInfo";
 import { LessonNavigation } from "./lesson/LessonNavigation";
-import { LessonFooter } from "./lesson/LessonFooter";
 import { Lesson } from "@/types/course";
 import { useProgress } from "@/hooks/useProgress";
-import { useVideoQuestions } from "@/hooks/useVideoQuestions";
 
 interface LessonDetailProps {
   lesson: Lesson;
@@ -36,17 +34,6 @@ export const LessonDetail = ({
   const isCompleted = completedLessons.has(lessonKey);
   const progressPercent = getCompletionRate(lessonKey);
 
-  // Video questions hook
-  const {
-    currentQuestion,
-    showQuestion,
-    checkVideoProgress,
-    submitAnswer,
-    resetQuestionTrigger,
-    startQuestionSession,
-    hasQuestions
-  } = useVideoQuestions(lesson.Aula || '');
-
   const handleVideoComplete = () => {
     console.log('Video completed, hasNext:', hasNext);
     if (hasNext) {
@@ -65,29 +52,7 @@ export const LessonDetail = ({
 
   const handlePlaybackSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
-  };
-
-  const handleVideoProgress = (currentTime: number, duration: number) => {
-    // Check if we should trigger a question
-    checkVideoProgress(currentTime, duration);
-  };
-
-  const handleQuestionAnswer = (selectedAnswer: string) => {
-    const isCorrect = submitAnswer(selectedAnswer);
-    
-    // Pause the video when question appears
-    if (typeof window !== 'undefined' && (window as any).videoPauseForQuestion) {
-      (window as any).videoPauseForQuestion();
-    }
-    
-    // Resume video after question is answered (with delay for feedback)
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && (window as any).videoResumeFromQuestion) {
-        (window as any).videoResumeFromQuestion();
-      }
-    }, 2000);
-
-    return isCorrect;
+    // The video player component should handle the actual speed change
   };
 
   // Clear auto-advance timer when component unmounts or lesson changes
@@ -99,15 +64,14 @@ export const LessonDetail = ({
     };
   }, [autoAdvanceTimer, lesson.id]);
 
-  // Reset transition state and question trigger when lesson changes
+  // Reset transition state when lesson changes
   useEffect(() => {
     setIsTransitioning(false);
-    resetQuestionTrigger();
     if (autoAdvanceTimer) {
       clearTimeout(autoAdvanceTimer);
       setAutoAdvanceTimer(null);
     }
-  }, [lesson.id, resetQuestionTrigger]);
+  }, [lesson.id]);
 
   // Clear timer when user manually navigates
   const handleManualNavigation = (navigationFn: () => void) => {
@@ -139,7 +103,7 @@ export const LessonDetail = ({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <div className="lg:hidden">
         <LessonHeader lesson={lesson} onBack={onBack} isMobile={true} />
@@ -165,7 +129,6 @@ export const LessonDetail = ({
               autoPlay={true}
               onDurationChange={handleDurationChange}
               playbackSpeed={playbackSpeed}
-              onProgressUpdate={handleVideoProgress}
             />
           </div>
 
@@ -177,7 +140,6 @@ export const LessonDetail = ({
             isCompleted={isCompleted}
             playbackSpeed={playbackSpeed}
             onPlaybackSpeedChange={handlePlaybackSpeedChange}
-            hasQuestions={hasQuestions}
           />
         </div>
 
@@ -193,19 +155,6 @@ export const LessonDetail = ({
           onPrevious={handlePreviousClick}
         />
       </div>
-
-      {/* Question Footer Button */}
-      <LessonFooter
-        hasQuestions={hasQuestions}
-        onStartQuestions={startQuestionSession}
-      />
-
-      {/* Video Question Modal */}
-      <VideoQuestionModal
-        question={currentQuestion}
-        onAnswer={handleQuestionAnswer}
-        isVisible={showQuestion}
-      />
     </div>
   );
 };
