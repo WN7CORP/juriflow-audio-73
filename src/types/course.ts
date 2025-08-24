@@ -8,6 +8,7 @@ export interface Lesson {
   video?: string;
   capa?: string;
   modulo?: string;
+  Modulo?: string;
   Nome: string;
   Link: string;
   Descricao: string;
