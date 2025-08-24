@@ -21,8 +21,7 @@ const Index = () => {
       const { data, error } = await supabase
         .from("VIDEO-AULAS-DIAS")
         .select("*")
-        .order("Dia", { ascending: true })
-        .order("Aula", { ascending: true });
+        .order("id", { ascending: true });
 
       if (error) {
         console.error("Error fetching lessons:", error);
@@ -32,9 +31,9 @@ const Index = () => {
       console.log("Raw data from Supabase:", data);
 
       if (data) {
-        const mappedLessons: Lesson[] = data.map(item => ({
+        const mappedLessons: Lesson[] = data.map((item, index) => ({
           id: item.id,
-          Dia: item.Dia || '',
+          Dia: String(index + 1), // Generate sequential day numbers
           Aula: item.Aula || '',
           Tema: item.Tema || `Aula ${item.Aula}`,
           conteudo: item.conteudo || '',
