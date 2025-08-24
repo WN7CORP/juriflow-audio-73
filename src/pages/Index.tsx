@@ -32,7 +32,8 @@ const Index = () => {
       console.log("Raw data from Supabase:", data);
 
       if (data) {
-        const mappedLessons: Lesson[] = data.map((item, index) => ({
+        // Use type assertion para acessar as propriedades reais da base de dados
+        const mappedLessons: Lesson[] = data.map((item: any, index) => ({
           id: item.id,
           Dia: String(index + 1), // Generate sequential day numbers
           Aula: item.Aula || '',
