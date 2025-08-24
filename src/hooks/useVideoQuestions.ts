@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Question, QuestionAttempt, QuestionProgress } from '@/types/question';
+import { Question, QuestionAttempt, QuestionProgress } from '@/types/course';
 
 const STORAGE_KEY_PREFIX = 'video-questions-';
 const PROGRESS_KEY = 'question-progress';
@@ -18,6 +18,7 @@ export const useVideoQuestions = (lessonAula: string) => {
     wrongAnswers: 0,
     questionsAnswered: new Set()
   });
+  const [loading, setLoading] = useState(false);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${lessonAula}`;
 
@@ -27,55 +28,65 @@ export const useVideoQuestions = (lessonAula: string) => {
     const savedProgress = localStorage.getItem(PROGRESS_KEY);
     
     if (savedAttempts) {
-      const parsedAttempts = JSON.parse(savedAttempts);
-      setAttempts(parsedAttempts);
+      try {
+        const parsedAttempts = JSON.parse(savedAttempts);
+        setAttempts(parsedAttempts);
+      } catch (error) {
+        console.error('Error parsing saved attempts:', error);
+      }
     }
 
     if (savedProgress) {
-      const parsedProgress = JSON.parse(savedProgress);
-      setProgress({
-        ...parsedProgress,
-        questionsAnswered: new Set(parsedProgress.questionsAnswered)
-      });
+      try {
+        const parsedProgress = JSON.parse(savedProgress);
+        setProgress({
+          ...parsedProgress,
+          questionsAnswered: new Set(parsedProgress.questionsAnswered)
+        });
+      } catch (error) {
+        console.error('Error parsing saved progress:', error);
+      }
     }
   }, [storageKey]);
 
-  // Fetch questions for this lesson directly from table
+  // Fetch questions using RPC function
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!lessonAula) return;
       
+      setLoading(true);
+      
       try {
         console.log('Fetching questions for lesson:', lessonAula);
         
-        const { data, error } = await supabase
-          .from('QUESTÕES-CURSO')
-          .select('*')
-          .eq('Aula', lessonAula);
+        // Use the existing RPC function
+        const { data, error } = await supabase.rpc('get_lesson_questions', {
+          lesson_aula: lessonAula
+        });
 
-        console.log('Raw questions data:', data);
+        console.log('Questions RPC response:', { data, error });
 
         if (error) {
-          console.error('Error fetching questions:', error);
+          console.error('Error fetching questions via RPC:', error);
           return;
         }
 
         if (data && data.length > 0) {
-          // Map the response to Question interface
+          // Map RPC response to Question interface
           const mappedQuestions: Question[] = data.map((item: any) => ({
             id: item.id,
             pergunta: item.pergunta,
             resposta: item.resposta,
-            'Alternativa a': item['Alternativa a'],
-            'Alternativa b': item['Alternativa b'],
-            'Alternativa c': item['Alternativa c'],
-            'Alternativa d': item['Alternativa d'],
-            Aula: item.Aula
+            'Alternativa a': item.alternativa_a,
+            'Alternativa b': item.alternativa_b,
+            'Alternativa c': item.alternativa_c,
+            'Alternativa d': item.alternativa_d,
+            Aula: item.aula
           }));
 
           setQuestions(mappedQuestions);
           setProgress(prev => ({ ...prev, totalQuestions: mappedQuestions.length }));
-          console.log('Questions loaded:', mappedQuestions.length);
+          console.log('Questions loaded successfully:', mappedQuestions.length);
         } else {
           console.log('No questions found for lesson:', lessonAula);
           setQuestions([]);
@@ -83,6 +94,8 @@ export const useVideoQuestions = (lessonAula: string) => {
       } catch (error) {
         console.error('Error fetching questions:', error);
         setQuestions([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -90,7 +103,7 @@ export const useVideoQuestions = (lessonAula: string) => {
   }, [lessonAula]);
 
   const checkVideoProgress = useCallback((currentTime: number, duration: number) => {
-    if (!questions.length || questionTriggered || showQuestion) return;
+    if (!questions.length || questionTriggered || showQuestion || loading) return;
 
     const progressPercent = (currentTime / duration) * 100;
     
@@ -110,7 +123,7 @@ export const useVideoQuestions = (lessonAula: string) => {
         setQuestionTriggered(true);
       }
     }
-  }, [questions, questionTriggered, showQuestion, progress.questionsAnswered]);
+  }, [questions, questionTriggered, showQuestion, progress.questionsAnswered, loading]);
 
   const submitAnswer = useCallback((selectedAnswer: string) => {
     if (!currentQuestion) return;
@@ -140,11 +153,15 @@ export const useVideoQuestions = (lessonAula: string) => {
     setProgress(newProgress);
 
     // Save to localStorage
-    localStorage.setItem(storageKey, JSON.stringify(newAttempts));
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({
-      ...newProgress,
-      questionsAnswered: Array.from(newProgress.questionsAnswered)
-    }));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(newAttempts));
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+        ...newProgress,
+        questionsAnswered: Array.from(newProgress.questionsAnswered)
+      }));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
 
     // Hide question after 2 seconds to show feedback
     setTimeout(() => {
@@ -183,6 +200,7 @@ export const useVideoQuestions = (lessonAula: string) => {
     questionTriggered,
     attempts,
     progress,
+    loading,
     checkVideoProgress,
     submitAnswer,
     resetQuestionTrigger,

@@ -1,3 +1,4 @@
+
 export interface Lesson {
   id?: number;
   Dia: string;
@@ -7,14 +8,24 @@ export interface Lesson {
   video?: string;
   capa?: string;
   Area?: string;
-  modulo?: string;
-  Nome?: string;
-  Link?: string;
-  Descricao?: string;
+  Modulo?: string;
+  modulo?: string; // Mantendo compatibilidade
+}
+
+export interface Question {
+  id: number;
+  pergunta: string;
+  resposta: string;
+  'Alternativa a': string;
+  'Alternativa b': string;
+  'Alternativa c': string;
+  'Alternativa d': string;
+  Aula: string;
 }
 
 export interface Module {
-  day: string;
+  area: string;
+  modulo: string;
   lessons: Lesson[];
   totalLessons: number;
   completedLessons: number;
@@ -53,4 +64,18 @@ export interface UserStats {
   completionRate: number;
   weeklyGoal: number;
   weeklyProgress: number;
+}
+
+export interface QuestionAttempt {
+  questionId: number;
+  selectedAnswer: string;
+  isCorrect: boolean;
+  timestamp: Date;
+}
+
+export interface QuestionProgress {
+  totalQuestions: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  questionsAnswered: Set<number>;
 }

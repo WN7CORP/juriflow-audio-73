@@ -41,10 +41,8 @@ const Index = () => {
           video: item.video || '',
           capa: item.capa || '',
           Area: item.Area || 'Área não informada',
-          modulo: item.modulo || '',
-          Nome: item.Tema || `Aula ${item.Aula}`,
-          Link: item.video || '',
-          Descricao: item.conteudo || ''
+          Modulo: item.Modulo || item.modulo || '',
+          modulo: item.modulo || item.Modulo || ''
         }));
         
         console.log('Mapped lessons:', mappedLessons);
