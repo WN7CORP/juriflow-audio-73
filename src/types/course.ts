@@ -7,6 +7,10 @@ export interface Lesson {
   conteudo?: string;
   video?: string;
   capa?: string;
+  modulo?: string;
+  Nome: string;
+  Link: string;
+  Descricao: string;
   Area?: string;
 }
 

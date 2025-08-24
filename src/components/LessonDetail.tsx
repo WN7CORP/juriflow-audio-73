@@ -38,15 +38,11 @@ export const LessonDetail = ({
 
   // Video questions hook
   const {
-    questions,
     currentQuestion,
     showQuestion,
-    canAnswerQuestions,
-    progress,
     checkVideoProgress,
     submitAnswer,
     resetQuestionTrigger,
-    showQuestionManually,
     hasQuestions
   } = useVideoQuestions(lesson.Aula);
 
@@ -71,7 +67,7 @@ export const LessonDetail = ({
   };
 
   const handleVideoProgress = (currentTime: number, duration: number) => {
-    // Check if we should trigger a question or enable question answering
+    // Check if we should trigger a question
     checkVideoProgress(currentTime, duration);
   };
 
@@ -91,17 +87,6 @@ export const LessonDetail = ({
     }, 2000);
 
     return isCorrect;
-  };
-
-  const handleQuestionSelect = (questionId: number): boolean => {
-    const success = showQuestionManually(questionId);
-    if (success) {
-      // Pause video when showing question manually
-      if (typeof window !== 'undefined' && (window as any).videoPauseForQuestion) {
-        (window as any).videoPauseForQuestion();
-      }
-    }
-    return success;
   };
 
   // Clear auto-advance timer when component unmounts or lesson changes
@@ -192,10 +177,6 @@ export const LessonDetail = ({
             playbackSpeed={playbackSpeed}
             onPlaybackSpeedChange={handlePlaybackSpeedChange}
             hasQuestions={hasQuestions}
-            questions={questions}
-            answeredQuestions={progress.questionsAnswered}
-            canAnswerQuestions={canAnswerQuestions}
-            onQuestionSelect={handleQuestionSelect}
           />
         </div>
 

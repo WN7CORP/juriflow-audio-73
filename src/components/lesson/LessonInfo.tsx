@@ -3,10 +3,7 @@ import { Clock, CheckCircle, Play, HelpCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlaybackSpeedControl } from "@/components/PlaybackSpeedControl";
-import { QuestionsButton } from "@/components/QuestionsButton";
 import { Lesson } from "@/types/course";
-import { useState } from "react";
-import { QuestionsModal } from "@/components/QuestionsModal";
 
 interface LessonInfoProps {
   lesson: Lesson;
@@ -16,10 +13,6 @@ interface LessonInfoProps {
   playbackSpeed: number;
   onPlaybackSpeedChange: (speed: number) => void;
   hasQuestions?: boolean;
-  questions?: any[];
-  answeredQuestions?: Set<number>;
-  canAnswerQuestions?: boolean;
-  onQuestionSelect?: (questionId: number) => boolean;
 }
 
 export const LessonInfo = ({ 
@@ -29,37 +22,16 @@ export const LessonInfo = ({
   isCompleted, 
   playbackSpeed, 
   onPlaybackSpeedChange,
-  hasQuestions = false,
-  questions = [],
-  answeredQuestions = new Set(),
-  canAnswerQuestions = false,
-  onQuestionSelect
+  hasQuestions = false
 }: LessonInfoProps) => {
-  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
-
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleOpenQuestions = () => {
-    setShowQuestionsModal(true);
-  };
-
-  const handleQuestionSelect = (questionId: number) => {
-    if (onQuestionSelect) {
-      const success = onQuestionSelect(questionId);
-      if (success) {
-        setShowQuestionsModal(false);
-      }
-      return success;
-    }
-    return false;
-  };
-
   return (
-    <div className="p-4 lg:p-6 space-y-6">
+    <div className="p-4 lg:p-6 space-y-4">
       {/* Progress Bar - Always visible and prominent */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
@@ -72,14 +44,7 @@ export const LessonInfo = ({
             style={{ width: `${Math.max(progressPercent || 1, 1)}%` }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20 rounded-full"></div>
-            {/* 80% Mark for Questions */}
-            <div className="absolute left-[80%] top-0 w-0.5 h-full bg-orange-500 opacity-70"></div>
           </div>
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0%</span>
-          <span className="text-orange-600">80% (questões)</span>
-          <span>100%</span>
         </div>
       </div>
 
@@ -113,6 +78,13 @@ export const LessonInfo = ({
             Com questões
           </Badge>
         )}
+
+        {/* Area Badge */}
+        {lesson.Area && (
+          <Badge variant="outline">
+            {lesson.Area}
+          </Badge>
+        )}
       </div>
 
       {/* Lesson Title and Description */}
@@ -128,19 +100,6 @@ export const LessonInfo = ({
         )}
       </div>
 
-      {/* Questions Button - Always visible but conditional behavior */}
-      {hasQuestions && questions.length > 0 && (
-        <div className="flex justify-center">
-          <QuestionsButton
-            canAnswerQuestions={canAnswerQuestions}
-            totalQuestions={questions.length}
-            answeredQuestions={answeredQuestions.size}
-            onOpenQuestions={handleOpenQuestions}
-            videoProgress={progressPercent}
-          />
-        </div>
-      )}
-
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
@@ -148,31 +107,21 @@ export const LessonInfo = ({
         </div>
         
         <PlaybackSpeedControl
-          currentSpeed={playbackSpeed}
+          speed={playbackSpeed}
           onSpeedChange={onPlaybackSpeedChange}
         />
       </div>
 
       {/* Module Information */}
-      {lesson.conteudo && (
+      {lesson.modulo && (
         <Card className="bg-accent/50 border-accent">
           <CardContent className="p-3">
             <div className="text-sm text-muted-foreground">
-              <span className="font-medium">Conteúdo:</span> {lesson.conteudo}
+              <span className="font-medium">Módulo:</span> {lesson.modulo}
             </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Questions Modal */}
-      <QuestionsModal
-        isOpen={showQuestionsModal}
-        onClose={() => setShowQuestionsModal(false)}
-        questions={questions}
-        answeredQuestions={answeredQuestions}
-        canAnswerQuestions={canAnswerQuestions}
-        onQuestionSelect={handleQuestionSelect}
-      />
     </div>
   );
 };

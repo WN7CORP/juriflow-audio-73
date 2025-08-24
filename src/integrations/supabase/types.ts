@@ -289,21 +289,18 @@ export type Database = {
       }
       APP: {
         Row: {
-          capa: string | null
           descricao: string | null
           funcao: string | null
           id: number
           link: string | null
         }
         Insert: {
-          capa?: string | null
           descricao?: string | null
           funcao?: string | null
           id?: number
           link?: string | null
         }
         Update: {
-          capa?: string | null
           descricao?: string | null
           funcao?: string | null
           id?: number
@@ -2766,39 +2763,6 @@ export type Database = {
         }
         Relationships: []
       }
-      "QUESTÕES-CURSO": {
-        Row: {
-          "Alternativa a": string | null
-          "Alternativa b": string | null
-          "Alternativa c": string | null
-          "Alternativa d": string | null
-          Aula: string | null
-          id: number
-          pergunta: string | null
-          resposta: string | null
-        }
-        Insert: {
-          "Alternativa a"?: string | null
-          "Alternativa b"?: string | null
-          "Alternativa c"?: string | null
-          "Alternativa d"?: string | null
-          Aula?: string | null
-          id?: number
-          pergunta?: string | null
-          resposta?: string | null
-        }
-        Update: {
-          "Alternativa a"?: string | null
-          "Alternativa b"?: string | null
-          "Alternativa c"?: string | null
-          "Alternativa d"?: string | null
-          Aula?: string | null
-          id?: number
-          pergunta?: string | null
-          resposta?: string | null
-        }
-        Relationships: []
-      }
       resumos: {
         Row: {
           created_at: string | null
@@ -3583,35 +3547,29 @@ export type Database = {
       }
       "VIDEO-AULAS-DIAS": {
         Row: {
-          Area: string | null
           Aula: string | null
           capa: string | null
           conteudo: string | null
           Dia: string | null
           id: number
-          modulo: string | null
           Tema: string | null
           video: string | null
         }
         Insert: {
-          Area?: string | null
           Aula?: string | null
           capa?: string | null
           conteudo?: string | null
           Dia?: string | null
           id?: number
-          modulo?: string | null
           Tema?: string | null
           video?: string | null
         }
         Update: {
-          Area?: string | null
           Aula?: string | null
           capa?: string | null
           conteudo?: string | null
           Dia?: string | null
           id?: number
-          modulo?: string | null
           Tema?: string | null
           video?: string | null
         }
@@ -3701,19 +3659,6 @@ export type Database = {
           pdf_url: string
           publication_date: string | null
           title: string
-        }[]
-      }
-      get_lesson_questions: {
-        Args: { lesson_aula: string }
-        Returns: {
-          alternativa_a: string
-          alternativa_b: string
-          alternativa_c: string
-          alternativa_d: string
-          aula: string
-          id: number
-          pergunta: string
-          resposta: string
         }[]
       }
       get_truly_new_news_count: {
