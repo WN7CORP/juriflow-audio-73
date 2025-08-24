@@ -41,58 +41,38 @@ export const useVideoQuestions = (lessonAula: string) => {
     }
   }, [storageKey]);
 
-  // Fetch questions for this lesson using direct SQL query
+  // Fetch questions for this lesson
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        // Using RPC function to query the table with special characters
-        const { data, error } = await supabase.rpc('get_lesson_questions', {
-          lesson_aula: lessonAula
-        });
+        console.log('Fetching questions for lesson:', lessonAula);
+        
+        // Use direct query to QUESTÕES-CURSO table
+        const { data, error } = await supabase
+          .from('QUESTÕES-CURSO' as any)
+          .select('*')
+          .eq('Aula', lessonAula);
 
         if (error) {
           console.error('Error fetching questions:', error);
-          // Fallback: try direct query if RPC doesn't exist
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('questoes' as any)
-            .select('*')
-            .eq('aula', lessonAula);
-
-          if (fallbackError) {
-            console.error('Fallback query also failed:', fallbackError);
-            return;
-          }
-
-          if (fallbackData && fallbackData.length > 0) {
-            const mappedQuestions: Question[] = fallbackData.map((item: any) => ({
-              id: item.id || Math.random(),
-              pergunta: item.pergunta || item.question || '',
-              resposta: item.resposta || item.answer || '',
-              'Alternativa a': item.alternativa_a || item['Alternativa a'] || '',
-              'Alternativa b': item.alternativa_b || item['Alternativa b'] || '',
-              'Alternativa c': item.alternativa_c || item['Alternativa c'] || '',
-              'Alternativa d': item.alternativa_d || item['Alternativa d'] || '',
-              Aula: item.aula || item.Aula || lessonAula
-            }));
-            
-            setQuestions(mappedQuestions);
-            setProgress(prev => ({ ...prev, totalQuestions: mappedQuestions.length }));
-          }
           return;
         }
 
-        if (data && data.length > 0) {
+        console.log('Raw questions data:', data);
+
+        if (data && Array.isArray(data) && data.length > 0) {
           const mappedQuestions: Question[] = data.map((item: any) => ({
             id: item.id || Math.random(),
             pergunta: item.pergunta || '',
             resposta: item.resposta || '',
-            'Alternativa a': item.alternativa_a || '',
-            'Alternativa b': item.alternativa_b || '',
-            'Alternativa c': item.alternativa_c || '',
-            'Alternativa d': item.alternativa_d || '',
-            Aula: item.aula || lessonAula
+            'Alternativa a': item['Alternativa a'] || '',
+            'Alternativa b': item['Alternativa b'] || '',
+            'Alternativa c': item['Alternativa c'] || '',
+            'Alternativa d': item['Alternativa d'] || '',
+            Aula: item.Aula || lessonAula
           }));
           
+          console.log('Mapped questions:', mappedQuestions);
           setQuestions(mappedQuestions);
           setProgress(prev => ({ ...prev, totalQuestions: mappedQuestions.length }));
         }
@@ -162,7 +142,23 @@ export const useVideoQuestions = (lessonAula: string) => {
   const submitAnswer = useCallback((selectedAnswer: string) => {
     if (!currentQuestion) return;
 
-    const isCorrect = selectedAnswer.toLowerCase() === currentQuestion.resposta.toLowerCase();
+    // Convert numeric answer to letter for comparison
+    const answerMap: { [key: string]: string } = {
+      '1': 'a',
+      '2': 'b', 
+      '3': 'c',
+      '4': 'd'
+    };
+
+    const correctLetter = answerMap[currentQuestion.resposta] || currentQuestion.resposta.toLowerCase();
+    const isCorrect = selectedAnswer.toLowerCase() === correctLetter;
+    
+    console.log('Answer check:', {
+      selected: selectedAnswer,
+      correct: currentQuestion.resposta,
+      correctLetter,
+      isCorrect
+    });
     
     const attempt: QuestionAttempt = {
       questionId: currentQuestion.id,
