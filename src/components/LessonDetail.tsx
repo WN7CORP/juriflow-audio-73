@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { EnhancedVideoPlayer } from "./EnhancedVideoPlayer";
 import { VideoQuestionModal } from "./VideoQuestionModal";
 import { LessonHeader } from "./lesson/LessonHeader";
 import { LessonInfo } from "./lesson/LessonInfo";
 import { LessonNavigation } from "./lesson/LessonNavigation";
+import { LessonFooter } from "./lesson/LessonFooter";
 import { Lesson } from "@/types/course";
 import { useProgress } from "@/hooks/useProgress";
 import { useVideoQuestions } from "@/hooks/useVideoQuestions";
@@ -43,8 +43,9 @@ export const LessonDetail = ({
     checkVideoProgress,
     submitAnswer,
     resetQuestionTrigger,
+    startQuestionSession,
     hasQuestions
-  } = useVideoQuestions(lesson.Aula);
+  } = useVideoQuestions(lesson.Aula || '');
 
   const handleVideoComplete = () => {
     console.log('Video completed, hasNext:', hasNext);
@@ -138,7 +139,7 @@ export const LessonDetail = ({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Mobile Header */}
       <div className="lg:hidden">
         <LessonHeader lesson={lesson} onBack={onBack} isMobile={true} />
@@ -192,6 +193,12 @@ export const LessonDetail = ({
           onPrevious={handlePreviousClick}
         />
       </div>
+
+      {/* Question Footer Button */}
+      <LessonFooter
+        hasQuestions={hasQuestions}
+        onStartQuestions={startQuestionSession}
+      />
 
       {/* Video Question Modal */}
       <VideoQuestionModal

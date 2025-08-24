@@ -1,4 +1,3 @@
-
 export interface Lesson {
   id?: number;
   Dia: string;
@@ -8,6 +7,10 @@ export interface Lesson {
   video?: string;
   capa?: string;
   Area?: string;
+  modulo?: string;
+  Nome?: string;
+  Link?: string;
+  Descricao?: string;
 }
 
 export interface Module {

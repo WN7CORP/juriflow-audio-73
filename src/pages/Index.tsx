@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CourseModules } from "@/components/CourseModules";
@@ -41,7 +40,11 @@ const Index = () => {
           conteudo: item.conteudo || '',
           video: item.video || '',
           capa: item.capa || '',
-          Area: item.Area || 'Área não informada'
+          Area: item.Area || 'Área não informada',
+          modulo: item.modulo || '',
+          Nome: item.Tema || `Aula ${item.Aula}`,
+          Link: item.video || '',
+          Descricao: item.conteudo || ''
         }));
         
         console.log('Mapped lessons:', mappedLessons);

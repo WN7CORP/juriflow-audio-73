@@ -40,7 +40,7 @@ export const useVideoQuestions = (lessonAula: string) => {
     }
   }, [storageKey]);
 
-  // Fetch questions for this lesson using RPC function
+  // Fetch questions for this lesson directly from table
   useEffect(() => {
     const fetchQuestions = async () => {
       if (!lessonAula) return;
@@ -48,9 +48,10 @@ export const useVideoQuestions = (lessonAula: string) => {
       try {
         console.log('Fetching questions for lesson:', lessonAula);
         
-        const { data, error } = await supabase.rpc('get_lesson_questions', {
-          lesson_aula: lessonAula
-        });
+        const { data, error } = await supabase
+          .from('QUESTÕES-CURSO')
+          .select('*')
+          .eq('Aula', lessonAula);
 
         console.log('Raw questions data:', data);
 
@@ -60,16 +61,16 @@ export const useVideoQuestions = (lessonAula: string) => {
         }
 
         if (data && data.length > 0) {
-          // Map the RPC response to Question interface
+          // Map the response to Question interface
           const mappedQuestions: Question[] = data.map((item: any) => ({
             id: item.id,
             pergunta: item.pergunta,
             resposta: item.resposta,
-            'Alternativa a': item.alternativa_a,
-            'Alternativa b': item.alternativa_b,
-            'Alternativa c': item.alternativa_c,
-            'Alternativa d': item.alternativa_d,
-            Aula: item.aula
+            'Alternativa a': item['Alternativa a'],
+            'Alternativa b': item['Alternativa b'],
+            'Alternativa c': item['Alternativa c'],
+            'Alternativa d': item['Alternativa d'],
+            Aula: item.Aula
           }));
 
           setQuestions(mappedQuestions);
@@ -159,6 +160,22 @@ export const useVideoQuestions = (lessonAula: string) => {
     setQuestionTriggered(false);
   }, []);
 
+  const startQuestionSession = useCallback(() => {
+    if (questions.length > 0) {
+      const unansweredQuestions = questions.filter(q => 
+        !progress.questionsAnswered.has(q.id)
+      );
+
+      if (unansweredQuestions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * unansweredQuestions.length);
+        const selectedQuestion = unansweredQuestions[randomIndex];
+        
+        setCurrentQuestion(selectedQuestion);
+        setShowQuestion(true);
+      }
+    }
+  }, [questions, progress.questionsAnswered]);
+
   return {
     questions,
     currentQuestion,
@@ -169,6 +186,7 @@ export const useVideoQuestions = (lessonAula: string) => {
     checkVideoProgress,
     submitAnswer,
     resetQuestionTrigger,
+    startQuestionSession,
     hasQuestions: questions.length > 0
   };
 };
