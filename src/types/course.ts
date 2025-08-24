@@ -1,4 +1,3 @@
-
 export interface Lesson {
   id?: number;
   Dia: string;

@@ -16,11 +16,20 @@ const Index = () => {
 
   useEffect(() => {
     const fetchLessons = async () => {
-      const { data } = await supabase
+      console.log("Fetching lessons from VIDEO-AULAS-DIAS...");
+      
+      const { data, error } = await supabase
         .from("VIDEO-AULAS-DIAS")
         .select("*")
         .order("Dia", { ascending: true })
         .order("Aula", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching lessons:", error);
+        return;
+      }
+
+      console.log("Raw data from Supabase:", data);
 
       if (data) {
         const mappedLessons: Lesson[] = data.map(item => ({
@@ -32,14 +41,18 @@ const Index = () => {
           video: item.video || '',
           capa: item.capa || '',
           modulo: item.modulo || item.Modulo || 'Módulo não informado',
+          Modulo: item.Modulo || item.modulo || 'Módulo não informado',
           Nome: item.Tema || `Aula ${item.Aula}`,
           Link: item.video || '',
           Descricao: item.conteudo || 'Conteúdo não disponível',
           Area: item.Area || 'Área não informada'
         }));
+        
+        console.log("Mapped lessons:", mappedLessons);
         setAllLessons(mappedLessons);
       }
     };
+    
     fetchLessons();
   }, []);
 
