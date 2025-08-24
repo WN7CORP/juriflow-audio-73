@@ -54,13 +54,17 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
         // Use the first lesson's Modulo as the module identifier for navigation
         const moduleId = sortedLessons[0]?.Modulo || moduleArea;
 
+        // Get the first available capa-modulos from any lesson in this module
+        const moduleCover = sortedLessons.find(lesson => lesson.capaModulos)?.capaModulos || 
+                           sortedLessons[0]?.capa || 
+                           '/placeholder.svg';
+
         return {
           day: moduleId, // Use Modulo as day for navigation compatibility
           lessons: sortedLessons,
           totalLessons: moduleUserLessons.length,
           completedLessons: completedCount,
-          // Use capaModulos from first lesson, fallback to regular capa
-          coverImage: sortedLessons[0]?.capaModulos || sortedLessons[0]?.capa || '/placeholder.svg',
+          coverImage: moduleCover,
           duration: moduleUserLessons.length * 15, // 15 min per lesson estimate
           isNew: completedCount === 0,
           moduleArea: moduleArea // Add module area name for display

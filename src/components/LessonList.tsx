@@ -39,9 +39,16 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
 
         console.log('Raw lessons data:', data);
 
-        if (data) {
+        if (data && data.length > 0) {
+          // Ordenar as aulas por número da aula convertido para inteiro
+          const sortedData = data.sort((a, b) => {
+            const aulaA = parseInt(a.Aula) || 0;
+            const aulaB = parseInt(b.Aula) || 0;
+            return aulaA - aulaB;
+          });
+
           // Map Supabase data to Lesson interface
-          const mappedLessons: Lesson[] = data.map((item: any, index) => ({
+          const mappedLessons: Lesson[] = sortedData.map((item: any, index) => ({
             id: item.id,
             Dia: String(index + 1), // Keep for backward compatibility
             Aula: item.Aula || '',
@@ -62,13 +69,11 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
           setLessons(mappedLessons);
           
           // Set module info from first lesson
-          if (mappedLessons.length > 0) {
-            const firstLesson = mappedLessons[0];
-            setModuleInfo({
-              area: firstLesson.Area || 'Área não informada',
-              moduleName: `Módulo ${firstLesson.Modulo}`
-            });
-          }
+          const firstLesson = mappedLessons[0];
+          setModuleInfo({
+            area: firstLesson.Area || 'Área não informada',
+            moduleName: `${firstLesson.Area || 'Módulo'} ${firstLesson.Modulo}`
+          });
         }
       } catch (error) {
         console.error("Erro ao carregar aulas:", error);
@@ -177,6 +182,7 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
                             const target = e.target as HTMLImageElement;
                             target.src = '/placeholder.svg';
                           }}
+                          loading="lazy"
                         />
                         
                         {/* Overlay */}

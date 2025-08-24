@@ -16,6 +16,22 @@ interface LessonInfoProps {
   onPlaybackSpeedChange: (speed: number) => void;
 }
 
+// Simple markdown parser for basic formatting
+const parseMarkdown = (text: string) => {
+  if (!text) return text;
+  
+  // Convert ## to bold (h2 style)
+  text = text.replace(/##\s+([^\n]+)/g, '<strong>$1</strong>');
+  
+  // Convert **text** to bold
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  
+  // Convert line breaks to <br>
+  text = text.replace(/\n/g, '<br>');
+  
+  return text;
+};
+
 export const LessonInfo = ({ 
   lesson, 
   duration, 
@@ -37,6 +53,8 @@ export const LessonInfo = ({
 
   // Always show progress bar, even at 0%
   const displayProgress = Math.max(progressPercent, 0);
+
+  const formattedContent = parseMarkdown(lesson.conteudo || '');
 
   return (
     <div className="p-4 lg:p-6 animate-fade-in">
@@ -105,7 +123,7 @@ export const LessonInfo = ({
         )}
       </div>
 
-      {/* Description - Expandable on mobile */}
+      {/* Description - Expandable on mobile with markdown support */}
       {lesson.conteudo && (
         <div className="mb-4 lg:mb-6 animate-fade-in" style={{ animationDelay: '800ms' }}>
           <Button
@@ -119,7 +137,10 @@ export const LessonInfo = ({
           <div className={`text-muted-foreground text-sm lg:text-base leading-relaxed transition-all duration-500 bg-muted/30 p-3 lg:p-4 rounded-lg ${
             showDescription ? 'block max-h-none opacity-100' : 'line-clamp-3 lg:block lg:max-h-none opacity-90'
           }`}>
-            {lesson.conteudo}
+            <div 
+              dangerouslySetInnerHTML={{ __html: formattedContent }}
+              className="prose prose-sm lg:prose-base max-w-none prose-strong:text-foreground prose-strong:font-semibold"
+            />
           </div>
           {!showDescription && (
             <Button
