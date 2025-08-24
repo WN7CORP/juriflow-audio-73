@@ -40,14 +40,19 @@ export const useVideoQuestions = (lessonAula: string) => {
     }
   }, [storageKey]);
 
-  // Fetch questions for this lesson
+  // Fetch questions for this lesson using RPC function
   useEffect(() => {
     const fetchQuestions = async () => {
+      if (!lessonAula) return;
+      
       try {
-        const { data, error } = await supabase
-          .from('QUESTÕES-CURSO')
-          .select('*')
-          .eq('Aula', lessonAula);
+        console.log('Fetching questions for lesson:', lessonAula);
+        
+        const { data, error } = await supabase.rpc('get_lesson_questions', {
+          lesson_aula: lessonAula
+        });
+
+        console.log('Raw questions data:', data);
 
         if (error) {
           console.error('Error fetching questions:', error);
@@ -55,17 +60,32 @@ export const useVideoQuestions = (lessonAula: string) => {
         }
 
         if (data && data.length > 0) {
-          setQuestions(data);
-          setProgress(prev => ({ ...prev, totalQuestions: data.length }));
+          // Map the RPC response to Question interface
+          const mappedQuestions: Question[] = data.map((item: any) => ({
+            id: item.id,
+            pergunta: item.pergunta,
+            resposta: item.resposta,
+            'Alternativa a': item.alternativa_a,
+            'Alternativa b': item.alternativa_b,
+            'Alternativa c': item.alternativa_c,
+            'Alternativa d': item.alternativa_d,
+            Aula: item.aula
+          }));
+
+          setQuestions(mappedQuestions);
+          setProgress(prev => ({ ...prev, totalQuestions: mappedQuestions.length }));
+          console.log('Questions loaded:', mappedQuestions.length);
+        } else {
+          console.log('No questions found for lesson:', lessonAula);
+          setQuestions([]);
         }
       } catch (error) {
         console.error('Error fetching questions:', error);
+        setQuestions([]);
       }
     };
 
-    if (lessonAula) {
-      fetchQuestions();
-    }
+    fetchQuestions();
   }, [lessonAula]);
 
   const checkVideoProgress = useCallback((currentTime: number, duration: number) => {
@@ -94,7 +114,10 @@ export const useVideoQuestions = (lessonAula: string) => {
   const submitAnswer = useCallback((selectedAnswer: string) => {
     if (!currentQuestion) return;
 
-    const isCorrect = selectedAnswer.toLowerCase() === currentQuestion.resposta.toLowerCase();
+    // Convert answer letter to number for comparison
+    const answerMap: Record<string, string> = { 'a': '1', 'b': '2', 'c': '3', 'd': '4' };
+    const selectedNumber = answerMap[selectedAnswer.toLowerCase()];
+    const isCorrect = selectedNumber === currentQuestion.resposta;
     
     const attempt: QuestionAttempt = {
       questionId: currentQuestion.id,

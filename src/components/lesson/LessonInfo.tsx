@@ -90,12 +90,12 @@ export const LessonInfo = ({
       {/* Lesson Title and Description */}
       <div className="space-y-2">
         <h1 className="text-xl lg:text-2xl font-bold text-foreground line-clamp-2">
-          {lesson.Tema || lesson.Nome}
+          {lesson.Tema || `Aula ${lesson.Aula}`}
         </h1>
         
-        {lesson.Descricao && (
+        {lesson.conteudo && (
           <p className="text-muted-foreground text-sm lg:text-base leading-relaxed line-clamp-3 lg:line-clamp-4">
-            {lesson.Descricao}
+            {lesson.conteudo}
           </p>
         )}
       </div>
@@ -107,21 +107,10 @@ export const LessonInfo = ({
         </div>
         
         <PlaybackSpeedControl
-          speed={playbackSpeed}
+          currentSpeed={playbackSpeed}
           onSpeedChange={onPlaybackSpeedChange}
         />
       </div>
-
-      {/* Module Information */}
-      {lesson.modulo && (
-        <Card className="bg-accent/50 border-accent">
-          <CardContent className="p-3">
-            <div className="text-sm text-muted-foreground">
-              <span className="font-medium">Módulo:</span> {lesson.modulo}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
