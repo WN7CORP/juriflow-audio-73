@@ -1,4 +1,3 @@
-
 export interface Lesson {
   id?: number;
   Dia: string;
@@ -24,6 +23,7 @@ export interface Module {
   coverImage?: string;
   duration?: number;
   isNew?: boolean;
+  moduleArea?: string;
 }
 
 export interface CourseProgress {

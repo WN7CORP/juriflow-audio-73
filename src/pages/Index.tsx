@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CourseModules } from "@/components/CourseModules";
@@ -35,7 +36,7 @@ const Index = () => {
         // Use type assertion para acessar as propriedades reais da base de dados
         const mappedLessons: Lesson[] = data.map((item: any, index) => ({
           id: item.id,
-          Dia: String(index + 1), // Generate sequential day numbers
+          Dia: String(index + 1), // Keep for backward compatibility but not used for grouping
           Aula: item.Aula || '',
           Tema: item.Tema || `Aula ${item.Aula}`,
           conteudo: item.conteudo || '',
@@ -93,7 +94,7 @@ const Index = () => {
     if (currentIndex < sortedLessons.length - 1) {
       const nextLesson = sortedLessons[currentIndex + 1];
       setSelectedLesson(nextLesson);
-      setSelectedDay(nextLesson.Dia); // Update selected day if needed
+      setSelectedDay(nextLesson.Modulo || nextLesson.Dia); // Use Modulo for navigation
     }
   };
 
@@ -112,7 +113,7 @@ const Index = () => {
     if (currentIndex > 0) {
       const previousLesson = sortedLessons[currentIndex - 1];
       setSelectedLesson(previousLesson);
-      setSelectedDay(previousLesson.Dia); // Update selected day if needed
+      setSelectedDay(previousLesson.Modulo || previousLesson.Dia); // Use Modulo for navigation
     }
   };
 

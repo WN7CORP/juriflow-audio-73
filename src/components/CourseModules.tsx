@@ -20,41 +20,50 @@ export const CourseModules = ({ lessons, onDayClick }: CourseModulesProps) => {
   }, [lessons]);
 
   useEffect(() => {
-    // Group lessons by day and create modules
+    // Group lessons by Area (module name) instead of Dia
     const moduleMap = new Map<string, Lesson[]>();
     
     filteredLessons.forEach(lesson => {
-      const day = lesson.Dia;
-      if (!moduleMap.has(day)) {
-        moduleMap.set(day, []);
+      const moduleArea = lesson.Area || lesson.Modulo || `Módulo ${lesson.Modulo}`;
+      if (!moduleMap.has(moduleArea)) {
+        moduleMap.set(moduleArea, []);
       }
-      moduleMap.get(day)!.push(lesson);
+      moduleMap.get(moduleArea)!.push(lesson);
     });
 
     // Convert to Module array
     const moduleList: Module[] = Array.from(moduleMap.entries())
-      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-      .map(([day, dayLessons]) => {
-        const completedCount = dayLessons.filter(lesson => 
+      .sort((a, b) => {
+        // Sort by Modulo number if available, otherwise alphabetically
+        const moduloA = parseInt(a[1][0]?.Modulo || '0');
+        const moduloB = parseInt(b[1][0]?.Modulo || '0');
+        return moduloA - moduloB;
+      })
+      .map(([moduleArea, moduleUserLessons]) => {
+        const completedCount = moduleUserLessons.filter(lesson => 
           completedLessons.has(lesson.id?.toString() || '')
         ).length;
 
-        // Sort lessons by Aula number
-        const sortedLessons = dayLessons.sort((a, b) => {
+        // Sort lessons by Aula number within each module
+        const sortedLessons = moduleUserLessons.sort((a, b) => {
           const aulaA = parseInt(a.Aula) || 0;
           const aulaB = parseInt(b.Aula) || 0;
           return aulaA - aulaB;
         });
 
+        // Use the first lesson's Modulo as the module identifier for navigation
+        const moduleId = sortedLessons[0]?.Modulo || moduleArea;
+
         return {
-          day,
+          day: moduleId, // Use Modulo as day for navigation compatibility
           lessons: sortedLessons,
-          totalLessons: dayLessons.length,
+          totalLessons: moduleUserLessons.length,
           completedLessons: completedCount,
-          // Use the modulo column as cover image, fallback to first lesson's capa
-          coverImage: sortedLessons[0]?.modulo || sortedLessons[0]?.capa || '/placeholder.svg',
-          duration: dayLessons.length * 15, // 15 min per lesson estimate
-          isNew: completedCount === 0
+          // Use capaModulos from first lesson, fallback to regular capa
+          coverImage: sortedLessons[0]?.capaModulos || sortedLessons[0]?.capa || '/placeholder.svg',
+          duration: moduleUserLessons.length * 15, // 15 min per lesson estimate
+          isNew: completedCount === 0,
+          moduleArea: moduleArea // Add module area name for display
         };
       });
 

@@ -22,11 +22,14 @@ export const ModuleCard = ({ module, onClick }: ModuleCardProps) => {
   const isCompleted = progressPercentage === 100;
   const isStarted = progressPercentage > 0;
   
-  // Use modulo column as cover, fallback to first lesson's capa
-  const moduleCover = module.lessons[0]?.modulo || module.lessons[0]?.capa || '/placeholder.svg';
+  // Use capaModulos from first lesson, fallback to capa
+  const moduleCover = module.lessons[0]?.capaModulos || module.lessons[0]?.capa || '/placeholder.svg';
   
   // Calculate total estimated duration (15 min per lesson)
   const estimatedDuration = module.lessons.length * 15;
+  
+  // Get module display name
+  const moduleDisplayName = module.moduleArea || module.lessons[0]?.Area || `Módulo ${module.day}`;
   
   const getStatusBadge = () => {
     if (isCompleted) {
@@ -70,7 +73,7 @@ export const ModuleCard = ({ module, onClick }: ModuleCardProps) => {
         <div className="relative aspect-video overflow-hidden">
           <img
             src={moduleCover}
-            alt={`Módulo Dia ${module.day}`}
+            alt={`${moduleDisplayName}`}
             className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 group-hover:brightness-110"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -106,8 +109,8 @@ export const ModuleCard = ({ module, onClick }: ModuleCardProps) => {
           <div className="absolute bottom-4 left-4 right-4 transition-all duration-500 group-hover:translate-y-[-4px]">
             <div className="flex items-center gap-2 mb-2">
               <BookOpen className="h-5 w-5 text-white flex-shrink-0 transition-all duration-500 group-hover:scale-110" />
-              <h3 className="font-bold text-xl sm:text-2xl text-white transition-all duration-500 group-hover:text-primary-foreground">
-                Dia {module.day}
+              <h3 className="font-bold text-xl sm:text-2xl text-white transition-all duration-500 group-hover:text-primary-foreground line-clamp-2">
+                {moduleDisplayName}
               </h3>
             </div>
             
