@@ -55,8 +55,20 @@ export const useVideoQuestions = (lessonAula: string) => {
         }
 
         if (data && data.length > 0) {
-          setQuestions(data);
-          setProgress(prev => ({ ...prev, totalQuestions: data.length }));
+          // Map the data to our Question interface
+          const mappedQuestions: Question[] = data.map(item => ({
+            id: item.id,
+            pergunta: item.pergunta || '',
+            resposta: item.resposta || '',
+            'Alternativa a': item['Alternativa a'] || '',
+            'Alternativa b': item['Alternativa b'] || '',
+            'Alternativa c': item['Alternativa c'] || '',
+            'Alternativa d': item['Alternativa d'] || '',
+            Aula: item.Aula || ''
+          }));
+          
+          setQuestions(mappedQuestions);
+          setProgress(prev => ({ ...prev, totalQuestions: mappedQuestions.length }));
         }
       } catch (error) {
         console.error('Error fetching questions:', error);

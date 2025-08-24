@@ -107,7 +107,7 @@ export const LessonInfo = ({
         </div>
         
         <PlaybackSpeedControl
-          speed={playbackSpeed}
+          currentSpeed={playbackSpeed}
           onSpeedChange={onPlaybackSpeedChange}
         />
       </div>
