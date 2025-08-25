@@ -12,8 +12,10 @@ import { Lesson } from "@/types/course";
 const Index = () => {
   const [allLessons, setAllLessons] = useState<Lesson[]>([]);
   const [currentView, setCurrentView] = useState<'modules' | 'lessons' | 'lesson' | 'dashboard'>('modules');
-  const [selectedDay, setSelectedDay] = useState<string>('');
+  const [selectedModule, setSelectedModule] = useState<string>('');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedArea, setSelectedArea] = useState<string>('Todas');
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -48,7 +50,8 @@ const Index = () => {
           Link: item.video || '',
           Descricao: item.conteudo || 'Conteúdo não disponível',
           Area: item.Area || 'Área não informada',
-          capaModulos: item["capa-modulos"] || ''
+          capaModulos: item["capa-modulos"] || '',
+          material: item.material || '' // Added material field
         }));
         
         console.log("Mapped lessons:", mappedLessons);
@@ -59,8 +62,8 @@ const Index = () => {
     fetchLessons();
   }, []);
 
-  const handleDayClick = (day: string) => {
-    setSelectedDay(day);
+  const handleModuleClick = (moduleId: string) => {
+    setSelectedModule(moduleId);
     setCurrentView('lessons');
   };
 
@@ -94,7 +97,7 @@ const Index = () => {
     if (currentIndex < sortedLessons.length - 1) {
       const nextLesson = sortedLessons[currentIndex + 1];
       setSelectedLesson(nextLesson);
-      setSelectedDay(nextLesson.Modulo || nextLesson.Dia); // Use Modulo for navigation
+      setSelectedModule(nextLesson.Modulo || nextLesson.Dia); // Use Modulo for navigation
     }
   };
 
@@ -113,7 +116,7 @@ const Index = () => {
     if (currentIndex > 0) {
       const previousLesson = sortedLessons[currentIndex - 1];
       setSelectedLesson(previousLesson);
-      setSelectedDay(previousLesson.Modulo || previousLesson.Dia); // Use Modulo for navigation
+      setSelectedModule(previousLesson.Modulo || previousLesson.Dia); // Use Modulo for navigation
     }
   };
 
@@ -145,6 +148,15 @@ const Index = () => {
     return currentIndex > 0;
   };
 
+  // Filter lessons for the selected module
+  const getFilteredLessons = () => {
+    if (!selectedModule || selectedModule === '') return [];
+    
+    return allLessons.filter(lesson => 
+      lesson.Modulo === selectedModule || lesson.Dia === selectedModule
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -155,14 +167,15 @@ const Index = () => {
       <main className={`${currentView === 'lesson' ? 'pt-0' : 'pt-16'} transition-all duration-300`}>
         <div className="animate-fade-in">
           {currentView === 'modules' && (
-            <CourseModules lessons={allLessons} onDayClick={handleDayClick} />
+            <CourseModules lessons={allLessons} onDayClick={handleModuleClick} />
           )}
           
           {currentView === 'lessons' && (
             <LessonList 
-              day={selectedDay} 
-              onBack={handleBack} 
-              onLessonClick={handleLessonClick} 
+              lessons={getFilteredLessons()}
+              searchTerm={searchTerm}
+              selectedArea={selectedArea}
+              onLessonSelect={handleLessonClick}
             />
           )}
           
