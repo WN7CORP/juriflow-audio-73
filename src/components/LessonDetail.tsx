@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { EnhancedVideoPlayer } from "./EnhancedVideoPlayer";
+import { StudyMaterialButton } from "./StudyMaterialButton";
 import { LessonHeader } from "./lesson/LessonHeader";
 import { LessonInfo } from "./lesson/LessonInfo";
 import { LessonNavigation } from "./lesson/LessonNavigation";
 import { Lesson } from "@/types/course";
-import { useProgress } from "@/hooks/useProgress";
+import { useProgressByIP } from "@/hooks/useProgressByIP";
 
 interface LessonDetailProps {
   lesson: Lesson;
@@ -24,18 +25,31 @@ export const LessonDetail = ({
   hasNext,
   hasPrevious,
 }: LessonDetailProps) => {
-  const { completedLessons, getLessonProgress, getCompletionRate } = useProgress();
+  const { getCompletionRate, isCompleted } = useProgressByIP();
   const [lessonDuration, setLessonDuration] = useState(0);
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [completed, setCompleted] = useState(false);
   
   const lessonKey = lesson.id?.toString() || '';
-  const isCompleted = completedLessons.has(lessonKey);
-  const progressPercent = getCompletionRate(lessonKey);
+
+  // Load progress when lesson changes
+  useEffect(() => {
+    const loadProgress = async () => {
+      const progress = getCompletionRate(lessonKey);
+      const complete = isCompleted(lessonKey);
+      setProgressPercent(progress);
+      setCompleted(complete);
+    };
+
+    loadProgress();
+  }, [lessonKey, getCompletionRate, isCompleted]);
 
   const handleVideoComplete = () => {
     console.log('Video completed, hasNext:', hasNext);
+    setCompleted(true);
     if (hasNext) {
       console.log('Starting auto-advance timer');
       const timer = setTimeout(() => {
@@ -52,7 +66,6 @@ export const LessonDetail = ({
 
   const handlePlaybackSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
-    // The video player component should handle the actual speed change
   };
 
   // Clear auto-advance timer when component unmounts or lesson changes
@@ -137,7 +150,7 @@ export const LessonDetail = ({
             lesson={lesson}
             duration={lessonDuration}
             progressPercent={progressPercent}
-            isCompleted={isCompleted}
+            isCompleted={completed}
             playbackSpeed={playbackSpeed}
             onPlaybackSpeedChange={handlePlaybackSpeedChange}
           />
@@ -149,12 +162,18 @@ export const LessonDetail = ({
           progressPercent={progressPercent}
           hasNext={hasNext}
           hasPrevious={hasPrevious}
-          isCompleted={isCompleted}
+          isCompleted={completed}
           autoAdvanceTimer={!!autoAdvanceTimer}
           onNext={handleNextClick}
           onPrevious={handlePreviousClick}
         />
       </div>
+
+      {/* Study Material Button - Floating above professor chat */}
+      <StudyMaterialButton 
+        materialUrl={lesson.material}
+        lessonTitle={lesson.Tema}
+      />
     </div>
   );
 };

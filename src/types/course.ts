@@ -1,3 +1,4 @@
+
 export interface Lesson {
   id?: number;
   Dia: string;
@@ -13,6 +14,7 @@ export interface Lesson {
   Descricao: string;
   Area?: string;
   capaModulos?: string;
+  material?: string; // Added material field
 }
 
 export interface Module {

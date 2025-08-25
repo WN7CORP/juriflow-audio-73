@@ -212,6 +212,39 @@ export type Database = {
         }
         Relationships: []
       }
+      "06. Romance": {
+        Row: {
+          area: string | null
+          autor: string | null
+          download: string | null
+          id: number
+          imagem: string | null
+          link: string | null
+          livro: string | null
+          sobre: string | null
+        }
+        Insert: {
+          area?: string | null
+          autor?: string | null
+          download?: string | null
+          id?: number
+          imagem?: string | null
+          link?: string | null
+          livro?: string | null
+          sobre?: string | null
+        }
+        Update: {
+          area?: string | null
+          autor?: string | null
+          download?: string | null
+          id?: number
+          imagem?: string | null
+          link?: string | null
+          livro?: string | null
+          sobre?: string | null
+        }
+        Relationships: []
+      }
       admin_logs: {
         Row: {
           action_type: string
@@ -289,18 +322,21 @@ export type Database = {
       }
       APP: {
         Row: {
+          capa: string | null
           descricao: string | null
           funcao: string | null
           id: number
           link: string | null
         }
         Insert: {
+          capa?: string | null
           descricao?: string | null
           funcao?: string | null
           id?: number
           link?: string | null
         }
         Update: {
+          capa?: string | null
           descricao?: string | null
           funcao?: string | null
           id?: number
@@ -2329,6 +2365,42 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_progress_by_ip: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          last_position: number
+          lesson_id: number
+          progress_percent: number
+          updated_at: string
+          user_ip: string
+          watch_time: number
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          last_position?: number
+          lesson_id: number
+          progress_percent?: number
+          updated_at?: string
+          user_ip: string
+          watch_time?: number
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          last_position?: number
+          lesson_id?: number
+          progress_percent?: number
+          updated_at?: string
+          user_ip?: string
+          watch_time?: number
+        }
+        Relationships: []
+      }
       "LIVROS-INDICACAO": {
         Row: {
           audio: string | null
@@ -2760,6 +2832,39 @@ export type Database = {
           opcoes?: string[]
           pergunta?: string
           resposta_correta?: string
+        }
+        Relationships: []
+      }
+      "QUESTÕES-CURSO": {
+        Row: {
+          "Alternativa a": string | null
+          "Alternativa b": string | null
+          "Alternativa c": string | null
+          "Alternativa d": string | null
+          Aula: string | null
+          id: number
+          pergunta: string | null
+          resposta: string | null
+        }
+        Insert: {
+          "Alternativa a"?: string | null
+          "Alternativa b"?: string | null
+          "Alternativa c"?: string | null
+          "Alternativa d"?: string | null
+          Aula?: string | null
+          id?: number
+          pergunta?: string | null
+          resposta?: string | null
+        }
+        Update: {
+          "Alternativa a"?: string | null
+          "Alternativa b"?: string | null
+          "Alternativa c"?: string | null
+          "Alternativa d"?: string | null
+          Aula?: string | null
+          id?: number
+          pergunta?: string | null
+          resposta?: string | null
         }
         Relationships: []
       }
@@ -3547,29 +3652,41 @@ export type Database = {
       }
       "VIDEO-AULAS-DIAS": {
         Row: {
+          Area: string | null
           Aula: string | null
           capa: string | null
+          "capa-modulo": string | null
+          "capa-modulos": string | null
           conteudo: string | null
-          Dia: string | null
           id: number
+          material: string | null
+          Modulo: string | null
           Tema: string | null
           video: string | null
         }
         Insert: {
+          Area?: string | null
           Aula?: string | null
           capa?: string | null
+          "capa-modulo"?: string | null
+          "capa-modulos"?: string | null
           conteudo?: string | null
-          Dia?: string | null
           id?: number
+          material?: string | null
+          Modulo?: string | null
           Tema?: string | null
           video?: string | null
         }
         Update: {
+          Area?: string | null
           Aula?: string | null
           capa?: string | null
+          "capa-modulo"?: string | null
+          "capa-modulos"?: string | null
           conteudo?: string | null
-          Dia?: string | null
           id?: number
+          material?: string | null
+          Modulo?: string | null
           Tema?: string | null
           video?: string | null
         }
@@ -3659,6 +3776,19 @@ export type Database = {
           pdf_url: string
           publication_date: string | null
           title: string
+        }[]
+      }
+      get_lesson_questions: {
+        Args: { lesson_aula: string }
+        Returns: {
+          alternativa_a: string
+          alternativa_b: string
+          alternativa_c: string
+          alternativa_d: string
+          aula: string
+          id: number
+          pergunta: string
+          resposta: string
         }[]
       }
       get_truly_new_news_count: {

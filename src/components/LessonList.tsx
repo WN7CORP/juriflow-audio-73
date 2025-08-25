@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, Clock, CheckCircle2, Circle, BookOpen } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Play, Clock, BookOpen, CheckCircle2 } from "lucide-react";
 import { Lesson } from "@/types/course";
 import { useProgress } from "@/hooks/useProgress";
 
@@ -15,16 +14,20 @@ interface LessonListProps {
   onLessonClick: (lesson: Lesson) => void;
 }
 
+interface ModuleInfo {
+  area: string;
+  moduleName: string;
+}
+
 export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [moduleInfo, setModuleInfo] = useState<{ area: string; moduleName: string }>({ area: '', moduleName: '' });
+  const [moduleInfo, setModuleInfo] = useState<ModuleInfo>({ area: '', moduleName: '' });
   const { completedLessons, getCompletionRate } = useProgress();
 
   useEffect(() => {
     const fetchLessons = async () => {
       try {
-        console.log('Fetching lessons for Modulo:', day);
+        console.log("Fetching lessons for module:", day);
         
         const { data, error } = await supabase
           .from("VIDEO-AULAS-DIAS")
@@ -40,15 +43,15 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
         console.log('Raw lessons data:', data);
 
         if (data && data.length > 0) {
-          // Ordenar as aulas por número da aula convertido para inteiro
-          const sortedData = data.sort((a, b) => {
+          // Sort lessons by lesson number converted to integer
+          const sortedData = [...data].sort((a: any, b: any) => {
             const aulaA = parseInt(a.Aula) || 0;
             const aulaB = parseInt(b.Aula) || 0;
             return aulaA - aulaB;
           });
 
           // Map Supabase data to Lesson interface
-          const mappedLessons: Lesson[] = sortedData.map((item: any, index) => ({
+          const mappedLessons: Lesson[] = sortedData.map((item: any, index: number) => ({
             id: item.id,
             Dia: String(index + 1), // Keep for backward compatibility
             Aula: item.Aula || '',
@@ -62,10 +65,11 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
             Link: item.video || '',
             Descricao: item.conteudo || 'Conteúdo não disponível',
             Area: item.Area || 'Área não informada',
-            capaModulos: item["capa-modulos"] || ''
+            capaModulos: item["capa-modulos"] || '',
+            material: item.material || ''
           }));
           
-          console.log('Mapped lessons:', mappedLessons);
+          console.log("Mapped lessons:", mappedLessons);
           setLessons(mappedLessons);
           
           // Set module info from first lesson
@@ -77,235 +81,126 @@ export const LessonList = ({ day, onBack, onLessonClick }: LessonListProps) => {
         }
       } catch (error) {
         console.error("Erro ao carregar aulas:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
-
+    
     fetchLessons();
   }, [day]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando aulas...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const completedCount = lessons.filter(lesson => 
-    completedLessons.has(lesson.id?.toString() || '')
-  ).length;
-  const progressPercentage = lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0;
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - Enhanced with animations */}
-      <div className="sticky top-0 z-40 bg-surface-glass/95 backdrop-blur border-b border-border animate-fade-in">
-        <div className="px-4 sm:px-6 py-4">
-          <div className="flex items-center gap-3 mb-3">
+      <div className="sticky top-0 z-40 bg-surface-glass/95 backdrop-blur border-b border-border">
+        <div className="container mx-auto px-4 py-4 max-w-6xl">
+          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="p-2 hover:bg-accent transition-all duration-300 hover:scale-110 animate-scale-in"
+              className="p-2"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '200ms' }}>
-              <BookOpen className="h-5 w-5 text-primary" />
-              <div className="flex flex-col">
-                <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                  {moduleInfo.moduleName}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {moduleInfo.area}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                {moduleInfo.moduleName}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {moduleInfo.area} • {lessons.length} aulas disponíveis
+              </p>
             </div>
-          </div>
-
-          {/* Progress Bar - Enhanced */}
-          <div className="space-y-2 animate-fade-in" style={{ animationDelay: '400ms' }}>
-            <div className="flex justify-between text-xs sm:text-sm">
-              <span className="text-muted-foreground">
-                {completedCount} de {lessons.length} aulas concluídas
-              </span>
-              <span className="text-foreground font-medium">
-                {Math.round(progressPercentage)}%
-              </span>
-            </div>
-            <Progress value={progressPercentage} className="h-2 transition-all duration-500" />
           </div>
         </div>
       </div>
 
-      {/* Lessons List - Enhanced with staggered animations */}
-      <div className="px-4 sm:px-6 py-6">
-        <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
-          {lessons.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg mb-4">
-                Nenhuma aula encontrada para este módulo.
-              </p>
-              <Button onClick={onBack} variant="outline">
-                Voltar aos Módulos
-              </Button>
-            </div>
-          ) : (
-            lessons.map((lesson, index) => {
-              const isCompleted = completedLessons.has(lesson.id?.toString() || '');
-              const progressPercent = getCompletionRate(lesson.id?.toString() || '');
-              const isWatching = progressPercent > 0 && progressPercent < 100;
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="grid gap-4 sm:gap-6">
+          {lessons.map((lesson) => {
+            const lessonKey = lesson.id?.toString() || '';
+            const isCompleted = completedLessons.has(lessonKey);
+            const progressPercent = getCompletionRate(lessonKey);
+            const hasProgress = progressPercent > 0;
 
-              return (
-                <div 
-                  key={lesson.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <Card
-                    className="group cursor-pointer overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-500 hover:shadow-lg hover:scale-[1.01] animate-scale-in"
-                    onClick={() => onLessonClick(lesson)}
-                  >
-                    <div className="flex flex-col sm:flex-row">
-                      {/* Thumbnail - Enhanced */}
-                      <div className="relative w-full sm:w-48 aspect-video sm:aspect-square overflow-hidden flex-shrink-0">
-                        <img
-                          src={lesson.capa || '/placeholder.svg'}
-                          alt={lesson.Nome}
-                          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/placeholder.svg';
-                          }}
-                          loading="lazy"
-                        />
-                        
-                        {/* Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black/60 to-transparent transition-all duration-500" />
-                        
-                        {/* Play Button - Enhanced */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-primary/90 backdrop-blur-sm rounded-full p-3 sm:p-4 transform transition-all duration-500 group-hover:scale-125 group-hover:bg-primary group-hover:shadow-lg">
-                            <Play className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground fill-current" />
+            return (
+              <Card key={lesson.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer animate-fade-in bg-card/90 backdrop-blur">
+                <div onClick={() => onLessonClick(lesson)}>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex gap-4">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-20 h-14 sm:w-32 sm:h-20 lg:w-40 lg:h-24 rounded-lg overflow-hidden bg-muted/50">
+                          <img
+                            src={lesson.capa || '/placeholder.svg'}
+                            alt={lesson.Tema}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder.svg';
+                            }}
+                            loading="lazy"
+                          />
+                          
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Play className="h-6 w-6 lg:h-8 lg:w-8 text-white" />
                           </div>
                         </div>
 
-                        {/* Status Icon - Enhanced */}
-                        <div className="absolute top-3 right-3 transition-all duration-300 group-hover:scale-110">
-                          {isCompleted ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-400 animate-scale-in" />
-                          ) : isWatching ? (
-                            <div className="relative">
-                              <Circle className="h-5 w-5 text-primary" />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="h-2 w-2 bg-primary rounded-full animate-pulse"></div>
-                              </div>
-                            </div>
-                          ) : (
-                            <Circle className="h-5 w-5 text-muted-foreground" />
+                        <Badge className="absolute -top-2 -left-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-1">
+                          {lesson.Aula}
+                        </Badge>
+                      </div>
+
+                      <div className="flex-1 min-w-0 space-y-2 lg:space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold text-base lg:text-lg text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
+                            {lesson.Tema}
+                          </h3>
+                          
+                          {isCompleted && (
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 flex-shrink-0">
+                              <CheckCircle2 className="h-3 w-3 lg:h-4 lg:w-4 mr-1" />
+                              Concluída
+                            </Badge>
                           )}
                         </div>
 
-                        {/* Progress Bar on thumbnail */}
-                        {progressPercent > 0 && (
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
-                            <div
-                              className="h-full bg-primary transition-all duration-500"
-                              style={{ width: `${progressPercent}%` }}
-                            />
+                        <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 lg:h-4 lg:w-4" />
+                            <span>~15 min</span>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Content - Enhanced */}
-                      <div className="flex-1 p-4 sm:p-6 transition-all duration-300 group-hover:bg-accent/5">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="text-xs transition-all duration-300 group-hover:border-primary group-hover:text-primary">
-                              Aula {lesson.Aula}
-                            </Badge>
-                            {lesson.Area && (
-                              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
-                                {lesson.Area}
-                              </Badge>
-                            )}
-                            {isCompleted && (
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs animate-scale-in">
-                                Concluída
-                              </Badge>
-                            )}
-                            {isWatching && (
-                              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs animate-scale-in">
-                                Em andamento
-                              </Badge>
-                            )}
-                          </div>
+                          {lesson.Area && (
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="h-3 w-3 lg:h-4 lg:w-4" />
+                              <span>{lesson.Area}</span>
+                            </div>
+                          )}
                         </div>
 
-                        <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-all duration-300">
-                          {lesson.Nome}
-                        </h3>
-
                         {lesson.Descricao && (
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 sm:line-clamp-3 transition-colors duration-300 group-hover:text-foreground">
+                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                             {lesson.Descricao}
                           </p>
                         )}
 
-                        {/* Meta info - Enhanced */}
-                        <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground mb-3 transition-colors duration-300 group-hover:text-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>~15 min</span>
-                          </div>
-                          {progressPercent > 0 && (
-                            <div className="flex items-center gap-1">
-                              <Play className="h-3 w-3" />
-                              <span>{Math.round(progressPercent)}% assistido</span>
+                        {hasProgress && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Progresso</span>
+                              <span>{Math.round(progressPercent)}%</span>
                             </div>
-                          )}
-                        </div>
-
-                        {/* Progress bar for desktop - Enhanced */}
-                        {progressPercent > 0 && (
-                          <div className="hidden sm:block">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs text-muted-foreground transition-colors duration-300 group-hover:text-foreground">Progresso</span>
-                              <span className="text-xs text-foreground font-medium">
-                                {Math.round(progressPercent)}%
-                              </span>
-                            </div>
-                            <Progress value={progressPercent} className="h-1.5 transition-all duration-500 group-hover:h-2" />
+                            <Progress 
+                              value={progressPercent} 
+                              className="h-2 bg-secondary" 
+                            />
                           </div>
                         )}
                       </div>
                     </div>
-                  </Card>
+                  </CardContent>
                 </div>
-              );
-            })
-          )}
+              </Card>
+            );
+          })}
         </div>
-
-        {/* Mobile CTA - Enhanced */}
-        {lessons.length > 0 && (
-          <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: `${lessons.length * 100}ms` }}>
-            <Card className="p-6 max-w-md mx-auto transition-all duration-500 hover:shadow-lg hover:scale-105">
-              <h3 className="font-semibold mb-2">Continue Aprendendo</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {completedCount === lessons.length 
-                  ? "🎉 Parabéns! Você concluiu este módulo."
-                  : `Faltam ${lessons.length - completedCount} aulas para concluir.`
-                }
-              </p>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );
