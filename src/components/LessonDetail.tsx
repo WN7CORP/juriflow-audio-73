@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { EnhancedVideoPlayer } from "./EnhancedVideoPlayer";
-import { StudyMaterialButton } from "./StudyMaterialButton";
 import { LessonHeader } from "./lesson/LessonHeader";
 import { LessonInfo } from "./lesson/LessonInfo";
 import { LessonNavigation } from "./lesson/LessonNavigation";
 import { Lesson } from "@/types/course";
-import { useProgressByIP } from "@/hooks/useProgressByIP";
+import { useProgress } from "@/hooks/useProgress";
 
 interface LessonDetailProps {
   lesson: Lesson;
@@ -25,34 +24,22 @@ export const LessonDetail = ({
   hasNext,
   hasPrevious,
 }: LessonDetailProps) => {
-  const { getCompletionRate, isCompleted } = useProgressByIP();
+  const { completedLessons, getLessonProgress, getCompletionRate } = useProgress();
   const [lessonDuration, setLessonDuration] = useState(0);
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [progressPercent, setProgressPercent] = useState(0);
-  const [completed, setCompleted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   
   const lessonKey = lesson.id?.toString() || '';
-
-  // Load progress when lesson changes
-  useEffect(() => {
-    const loadProgress = async () => {
-      const progress = getCompletionRate(lessonKey);
-      const complete = isCompleted(lessonKey);
-      setProgressPercent(progress);
-      setCompleted(complete);
-    };
-
-    loadProgress();
-  }, [lessonKey, getCompletionRate, isCompleted]);
+  const isCompleted = completedLessons.has(lessonKey);
+  const progressPercent = getCompletionRate(lessonKey);
 
   const handleVideoComplete = () => {
-    setCompleted(true);
+    console.log('Video completed, hasNext:', hasNext);
     if (hasNext) {
+      console.log('Starting auto-advance timer');
       const timer = setTimeout(() => {
+        console.log('Auto-advancing to next lesson');
         handleNextClick();
       }, 3000);
       setAutoAdvanceTimer(timer);
@@ -65,11 +52,7 @@ export const LessonDetail = ({
 
   const handlePlaybackSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
-  };
-
-  const handleTimeUpdate = (time: number, playing: boolean) => {
-    setCurrentTime(time);
-    setIsPlaying(playing);
+    // The video player component should handle the actual speed change
   };
 
   // Clear auto-advance timer when component unmounts or lesson changes
@@ -84,8 +67,6 @@ export const LessonDetail = ({
   // Reset transition state when lesson changes
   useEffect(() => {
     setIsTransitioning(false);
-    setCurrentTime(0);
-    setIsPlaying(false);
     if (autoAdvanceTimer) {
       clearTimeout(autoAdvanceTimer);
       setAutoAdvanceTimer(null);
@@ -94,24 +75,28 @@ export const LessonDetail = ({
 
   // Clear timer when user manually navigates
   const handleManualNavigation = (navigationFn: () => void) => {
+    console.log('Manual navigation triggered');
     if (autoAdvanceTimer) {
       clearTimeout(autoAdvanceTimer);
       setAutoAdvanceTimer(null);
     }
     setIsTransitioning(true);
     
+    // Small delay for smooth transition
     setTimeout(() => {
       navigationFn();
     }, 100);
   };
 
   const handleNextClick = () => {
+    console.log('Next button clicked, hasNext:', hasNext);
     if (hasNext) {
       handleManualNavigation(onNextLesson);
     }
   };
 
   const handlePreviousClick = () => {
+    console.log('Previous button clicked, hasPrevious:', hasPrevious);
     if (hasPrevious) {
       handleManualNavigation(onPreviousLesson);
     }
@@ -144,7 +129,6 @@ export const LessonDetail = ({
               autoPlay={true}
               onDurationChange={handleDurationChange}
               playbackSpeed={playbackSpeed}
-              onTimeUpdate={handleTimeUpdate}
             />
           </div>
 
@@ -153,11 +137,9 @@ export const LessonDetail = ({
             lesson={lesson}
             duration={lessonDuration}
             progressPercent={progressPercent}
-            isCompleted={completed}
+            isCompleted={isCompleted}
             playbackSpeed={playbackSpeed}
             onPlaybackSpeedChange={handlePlaybackSpeedChange}
-            currentTime={currentTime}
-            isPlaying={isPlaying}
           />
         </div>
 
@@ -167,18 +149,12 @@ export const LessonDetail = ({
           progressPercent={progressPercent}
           hasNext={hasNext}
           hasPrevious={hasPrevious}
-          isCompleted={completed}
+          isCompleted={isCompleted}
           autoAdvanceTimer={!!autoAdvanceTimer}
           onNext={handleNextClick}
           onPrevious={handlePreviousClick}
         />
       </div>
-
-      {/* Study Material Button - Floating above professor chat */}
-      <StudyMaterialButton 
-        materialUrl={lesson.material}
-        lessonTitle={lesson.Tema}
-      />
     </div>
   );
 };

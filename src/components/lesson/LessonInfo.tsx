@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle2, ChevronDown, BookOpen, Play } from "lucide-react";
+import { Clock, CheckCircle2, ChevronDown, BookOpen } from "lucide-react";
 import { PlaybackSpeedControl } from "@/components/PlaybackSpeedControl";
 import { Lesson } from "@/types/course";
 import { useState } from "react";
@@ -14,16 +14,19 @@ interface LessonInfoProps {
   isCompleted: boolean;
   playbackSpeed: number;
   onPlaybackSpeedChange: (speed: number) => void;
-  currentTime?: number;
-  isPlaying?: boolean;
 }
 
 // Simple markdown parser for basic formatting
 const parseMarkdown = (text: string) => {
   if (!text) return text;
   
+  // Convert ## to bold (h2 style)
   text = text.replace(/##\s+([^\n]+)/g, '<strong>$1</strong>');
+  
+  // Convert **text** to bold
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  
+  // Convert line breaks to <br>
   text = text.replace(/\n/g, '<br>');
   
   return text;
@@ -35,9 +38,7 @@ export const LessonInfo = ({
   progressPercent, 
   isCompleted, 
   playbackSpeed, 
-  onPlaybackSpeedChange,
-  currentTime = 0,
-  isPlaying = false
+  onPlaybackSpeedChange 
 }: LessonInfoProps) => {
   const [showDescription, setShowDescription] = useState(false);
 
@@ -50,41 +51,13 @@ export const LessonInfo = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
+  // Always show progress bar, even at 0%
   const displayProgress = Math.max(progressPercent, 0);
+
   const formattedContent = parseMarkdown(lesson.conteudo || '');
 
   return (
     <div className="p-4 lg:p-6 animate-fade-in">
-      {/* Video Time Display */}
-      <div className="mb-4 p-3 bg-muted/30 rounded-lg border animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              {isPlaying ? (
-                <Play className="h-4 w-4 text-green-500 animate-pulse" />
-              ) : (
-                <div className="h-4 w-4 rounded-full bg-muted border-2" />
-              )}
-              <span className="text-sm font-medium text-muted-foreground">Tempo:</span>
-            </div>
-            <div className="flex items-center gap-2 font-mono">
-              <span className="text-lg font-bold text-primary">{formatTime(currentTime)}</span>
-              <span className="text-muted-foreground">/</span>
-              <span className="text-sm text-muted-foreground">{formatTime(duration || 0)}</span>
-            </div>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {isPlaying ? 'Reproduzindo' : 'Pausado'}
-          </div>
-        </div>
-      </div>
-
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
           <h1 className="text-lg lg:text-2xl font-bold text-foreground mb-3 line-clamp-2 leading-tight animate-scale-in">

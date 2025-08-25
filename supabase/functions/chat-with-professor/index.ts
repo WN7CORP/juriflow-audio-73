@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const GEMINI_API_KEY = 'AIzaSyD3wUdL-P6oY9bXSUU-b_OczRM-fnNMbH4';
+const GEMINI_API_KEY = 'AIzaSyCy6K5rcixKbyZ6Z9PggPOyJnuY2FcrYok';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -41,7 +41,7 @@ DIRETRIZES:
 
 Responda agora à pergunta do aluno:`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,20 +53,19 @@ Responda agora à pergunta do aluno:`;
           }]
         }],
         generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
           maxOutputTokens: 1024,
         }
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Gemini API Error: ${response.status} - ${errorText}`);
       throw new Error(`API Error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Gemini API Response:', JSON.stringify(data, null, 2));
-    
     const professorResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Desculpe, não consegui processar sua pergunta no momento.';
 
     return new Response(JSON.stringify({ 
