@@ -14,8 +14,8 @@ interface LessonListProps {
   onLessonSelect: (lesson: Lesson) => void;
 }
 
-export const LessonList = ({ lessons, searchTerm, selectedArea, onLessonSelect }: LessonListProps) => {
-  const { getCompletionRate, isCompleted, getLessonProgress } = useProgressByIP();
+export const LessonList = ({ lessons, onLessonSelect }: LessonListProps) => {
+  const { getLessonProgress } = useProgressByIP();
   const [progressData, setProgressData] = useState<Map<string, number>>(new Map());
 
   // Load progress for all lessons
@@ -44,16 +44,21 @@ export const LessonList = ({ lessons, searchTerm, selectedArea, onLessonSelect }
     return `${minutes} min`;
   };
 
-  const filteredLessons = lessons.filter(lesson => {
-    const matchesSearch = lesson.Tema?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lesson.conteudo?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesArea = selectedArea === "Todas" || lesson.Area === selectedArea;
-    return matchesSearch && matchesArea;
-  });
+  if (lessons.length === 0) {
+    return (
+      <div className="text-center py-12 animate-fade-in">
+        <div className="text-6xl mb-4">🔍</div>
+        <h3 className="text-xl font-semibold text-foreground mb-2">Nenhuma aula encontrada</h3>
+        <p className="text-muted-foreground">
+          Tente ajustar os filtros ou termo de busca
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6 md:gap-8">
-      {filteredLessons.map((lesson) => {
+      {lessons.map((lesson) => {
         const lessonId = lesson.id?.toString() || '';
         const progressPercent = progressData.get(lessonId) || 0;
         const completed = progressPercent >= 90;
@@ -132,7 +137,7 @@ export const LessonList = ({ lessons, searchTerm, selectedArea, onLessonSelect }
                       <div className="flex items-center gap-4 text-muted-foreground mb-4">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          <span className="text-sm">{lesson.Aula}</span>
+                          <span className="text-sm">Aula {lesson.Aula}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
@@ -145,7 +150,7 @@ export const LessonList = ({ lessons, searchTerm, selectedArea, onLessonSelect }
                   {/* Description */}
                   {lesson.conteudo && (
                     <p className="text-muted-foreground text-sm lg:text-base leading-relaxed line-clamp-3 mb-4">
-                      {lesson.conteudo}
+                      {lesson.conteudo.replace(/[#*]/g, '').substring(0, 150)}...
                     </p>
                   )}
 
@@ -165,16 +170,6 @@ export const LessonList = ({ lessons, searchTerm, selectedArea, onLessonSelect }
           </Card>
         );
       })}
-
-      {filteredLessons.length === 0 && (
-        <div className="text-center py-12 animate-fade-in">
-          <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-xl font-semibold text-foreground mb-2">Nenhuma aula encontrada</h3>
-          <p className="text-muted-foreground">
-            Tente ajustar os filtros ou termo de busca
-          </p>
-        </div>
-      )}
     </div>
   );
 };

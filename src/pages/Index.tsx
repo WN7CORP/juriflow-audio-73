@@ -6,6 +6,7 @@ import { LessonList } from "@/components/LessonList";
 import { LessonDetail } from "@/components/LessonDetail";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { Header } from "@/components/Header";
+import { SearchAndFilter } from "@/components/SearchAndFilter";
 import { LegalProfessorChat } from "@/components/LegalProfessorChat";
 import { Lesson } from "@/types/course";
 
@@ -77,6 +78,8 @@ const Index = () => {
       setCurrentView('lessons');
     } else if (currentView === 'lessons') {
       setCurrentView('modules');
+      setSearchTerm(''); // Reset search when going back to modules
+      setSelectedArea('Todas'); // Reset area filter
     } else if (currentView === 'dashboard') {
       setCurrentView('modules');
     }
@@ -148,13 +151,37 @@ const Index = () => {
     return currentIndex > 0;
   };
 
-  // Filter lessons for the selected module
+  // Filter lessons for the selected module with search and area filters
   const getFilteredLessons = () => {
     if (!selectedModule || selectedModule === '') return [];
     
-    return allLessons.filter(lesson => 
+    let filtered = allLessons.filter(lesson => 
       lesson.Modulo === selectedModule || lesson.Dia === selectedModule
     );
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(lesson => 
+        lesson.Tema?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lesson.conteudo?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply area filter
+    if (selectedArea !== 'Todas') {
+      filtered = filtered.filter(lesson => lesson.Area === selectedArea);
+    }
+
+    return filtered;
+  };
+
+  // Get unique areas from lessons for the current module
+  const getAvailableAreas = () => {
+    const moduleLessons = allLessons.filter(lesson => 
+      lesson.Modulo === selectedModule || lesson.Dia === selectedModule
+    );
+    const areas = [...new Set(moduleLessons.map(lesson => lesson.Area).filter(area => area && area !== 'Área não informada'))];
+    return ['Todas', ...areas];
   };
 
   return (
@@ -171,12 +198,23 @@ const Index = () => {
           )}
           
           {currentView === 'lessons' && (
-            <LessonList 
-              lessons={getFilteredLessons()}
-              searchTerm={searchTerm}
-              selectedArea={selectedArea}
-              onLessonSelect={handleLessonClick}
-            />
+            <div className="container mx-auto px-4 py-8">
+              <SearchAndFilter
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                selectedArea={selectedArea}
+                onAreaChange={setSelectedArea}
+                availableAreas={getAvailableAreas()}
+                onBack={handleBack}
+                totalLessons={getFilteredLessons().length}
+              />
+              <LessonList 
+                lessons={getFilteredLessons()}
+                searchTerm={searchTerm}
+                selectedArea={selectedArea}
+                onLessonSelect={handleLessonClick}
+              />
+            </div>
           )}
           
           {currentView === 'lesson' && selectedLesson && (
