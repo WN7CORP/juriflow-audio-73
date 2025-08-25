@@ -22,13 +22,11 @@ export const useProgressByIP = () => {
   useEffect(() => {
     const getIP = async () => {
       try {
-        // Try to get IP from ipify API
         const response = await fetch('https://api.ipify.org?format=json');
         const data = await response.json();
         setUserIP(data.ip || 'unknown');
       } catch (error) {
         console.error('Error getting IP:', error);
-        // Fallback to a random identifier stored in localStorage
         let fallbackIP = localStorage.getItem('fallback_user_id');
         if (!fallbackIP) {
           fallbackIP = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -55,10 +53,10 @@ export const useProgressByIP = () => {
     const watchTime = (progressPercent / 100) * totalDuration;
     const completed = progressPercent >= 90;
 
-    const progressData: Partial<LessonProgressByIP> = {
+    const progressData = {
       user_ip: userIP,
       lesson_id: lessonIdNum,
-      progress_percent: Math.round(progressPercent * 100) / 100, // Round to 2 decimals
+      progress_percent: Math.round(progressPercent * 100) / 100,
       last_position: Math.round(currentTime * 100) / 100,
       watch_time: Math.round(watchTime * 100) / 100,
       completed
@@ -96,7 +94,6 @@ export const useProgressByIP = () => {
     const lessonIdNum = parseInt(lessonId);
     if (isNaN(lessonIdNum)) return null;
 
-    // Check cache first
     const cached = lessonProgress.get(lessonId);
     if (cached) return cached;
 
@@ -108,7 +105,7 @@ export const useProgressByIP = () => {
         .eq('lesson_id', lessonIdNum)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows found"
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching progress:', error);
         return null;
       }

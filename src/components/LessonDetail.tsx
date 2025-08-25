@@ -32,6 +32,8 @@ export const LessonDetail = ({
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [progressPercent, setProgressPercent] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   const lessonKey = lesson.id?.toString() || '';
 
@@ -48,12 +50,9 @@ export const LessonDetail = ({
   }, [lessonKey, getCompletionRate, isCompleted]);
 
   const handleVideoComplete = () => {
-    console.log('Video completed, hasNext:', hasNext);
     setCompleted(true);
     if (hasNext) {
-      console.log('Starting auto-advance timer');
       const timer = setTimeout(() => {
-        console.log('Auto-advancing to next lesson');
         handleNextClick();
       }, 3000);
       setAutoAdvanceTimer(timer);
@@ -68,6 +67,11 @@ export const LessonDetail = ({
     setPlaybackSpeed(speed);
   };
 
+  const handleTimeUpdate = (time: number, playing: boolean) => {
+    setCurrentTime(time);
+    setIsPlaying(playing);
+  };
+
   // Clear auto-advance timer when component unmounts or lesson changes
   useEffect(() => {
     return () => {
@@ -80,6 +84,8 @@ export const LessonDetail = ({
   // Reset transition state when lesson changes
   useEffect(() => {
     setIsTransitioning(false);
+    setCurrentTime(0);
+    setIsPlaying(false);
     if (autoAdvanceTimer) {
       clearTimeout(autoAdvanceTimer);
       setAutoAdvanceTimer(null);
@@ -88,28 +94,24 @@ export const LessonDetail = ({
 
   // Clear timer when user manually navigates
   const handleManualNavigation = (navigationFn: () => void) => {
-    console.log('Manual navigation triggered');
     if (autoAdvanceTimer) {
       clearTimeout(autoAdvanceTimer);
       setAutoAdvanceTimer(null);
     }
     setIsTransitioning(true);
     
-    // Small delay for smooth transition
     setTimeout(() => {
       navigationFn();
     }, 100);
   };
 
   const handleNextClick = () => {
-    console.log('Next button clicked, hasNext:', hasNext);
     if (hasNext) {
       handleManualNavigation(onNextLesson);
     }
   };
 
   const handlePreviousClick = () => {
-    console.log('Previous button clicked, hasPrevious:', hasPrevious);
     if (hasPrevious) {
       handleManualNavigation(onPreviousLesson);
     }
@@ -142,6 +144,7 @@ export const LessonDetail = ({
               autoPlay={true}
               onDurationChange={handleDurationChange}
               playbackSpeed={playbackSpeed}
+              onTimeUpdate={handleTimeUpdate}
             />
           </div>
 
@@ -153,6 +156,8 @@ export const LessonDetail = ({
             isCompleted={completed}
             playbackSpeed={playbackSpeed}
             onPlaybackSpeedChange={handlePlaybackSpeedChange}
+            currentTime={currentTime}
+            isPlaying={isPlaying}
           />
         </div>
 
